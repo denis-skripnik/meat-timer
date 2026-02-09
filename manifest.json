@@ -1,5 +1,5 @@
 {
-  "name": "Таймер для готовки мяса",
+  "name": "Meat Cooking Timer / Таймер для готовки мяса",
   "short_name": "CookTimer",
   "start_url": "/index.html",
   "display": "standalone",

@@ -16,7 +16,7 @@ This is a specialized cooking timer application that combines visual, audio, and
 
 ### 🔔 Multi-Modal Alerts
 - **Audio beeps**: Web Audio API-generated tones for minute markers and completion
-- **Voice announcements**: Russian text-to-speech notifications using Speech Synthesis API
+- **Voice announcements**: English or Russian text-to-speech notifications using Speech Synthesis API
   - Start confirmation: "Timer started for X minutes"
   - Minute reminders: "One minute has passed. Time to flip the meat"
   - Completion alert: "Cooking complete! You can remove the meat from heat"
@@ -66,7 +66,7 @@ meat-timer/
 2. **Start Timer**: Click "Старт" (Start) to begin countdown
 3. **Minute Reminders**: Every minute, the app will:
    - Play a two-tone beep
-   - Announce via voice synthesis (in Russian)
+   - Announce via voice synthesis (in English and Russian)
    - Send a browser notification
    - Remind you to flip the meat
 4. **Completion**: When timer reaches zero:
@@ -100,7 +100,7 @@ meat-timer/
 
 ## Language
 
-The user interface and voice announcements are in **Russian** (ru-RU), making it ideal for Russian-speaking users. The app title translates to "Timer for Cooking Meat."
+The user interface and voice announcements are in **English** and **Russian** (ru-RU), making it ideal for English-speaking  Russian-speaking users. The app title translates to "Timer for Cooking Meat."
 
 ## Use Cases
 

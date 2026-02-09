@@ -10,8 +10,8 @@ self.addEventListener('message', event => {
   const data = event.data;
   if (!data) return;
 
-  if (data.type === 'MINUTE_NOTIFICATION') showNotification('Минутка готовки', data.text);
-  if (data.type === 'FINISH_NOTIFICATION') showNotification('Готовка завершена', data.text);
+  if (data.type === 'MINUTE_NOTIFICATION') showNotification(data.title, data.text);
+  if (data.type === 'FINISH_NOTIFICATION') showNotification(data.title, data.text);
 });
 
 function showNotification(title, body) {

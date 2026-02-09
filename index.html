@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Таймер для готовки мяса</title>
+  <title data-i18n="pageTitle">Таймер для готовки мяса</title>
   <link rel="manifest" href="manifest.json">
   <style>
     body {
@@ -34,13 +34,27 @@
       0% { transform: translateX(-50%) scale(1,1); opacity:0.7; }
       100% { transform: translateX(-50%) scale(1.3,1.4); opacity:0.3; }
     }
+    #languageSwitcher {
+      position: absolute; top: 10px; right: 10px;
+    }
+    #languageSwitcher button {
+      padding: 5px 10px; font-size: 0.9em; opacity: 0.5;
+    }
+    #languageSwitcher button.active {
+      opacity: 1; background: #555;
+    }
   </style>
 </head>
 <body>
-  <h1>🔥 Таймер для готовки мяса 🔥</h1>
+  <div id="languageSwitcher">
+    <button onclick="switchLanguage('en')" id="langEn">🇬🇧 EN</button>
+    <button onclick="switchLanguage('ru')" id="langRu">🇷🇺 RU</button>
+  </div>
+
+  <h1 data-i18n="mainHeading">🔥 Таймер для готовки мяса 🔥</h1>
 
   <div>
-    <input id="minutesInput" type="number" min="1" max="120" value="10"> мин
+    <input id="minutesInput" type="number" min="1" max="120" value="10"> <span data-i18n="minutesLabel">мин</span>
     <br>
     <input id="rangeInput" type="range" min="1" max="120" value="10">
   </div>
@@ -56,14 +70,45 @@
   </div>
 
   <div>
-    <button onclick="startTimer()">Старт</button>
-    <button onclick="resetTimer()">Сброс</button>
+    <button onclick="startTimer()" data-i18n="startButton">Старт</button>
+    <button onclick="resetTimer()" data-i18n="resetButton">Сброс</button>
   </div>
 
   <div id="timer">00:00</div>
   <div class="flame" id="flame"></div>
 
   <script>
+    // Translations dictionary
+    const translations = {
+      en: {
+        pageTitle: "Meat Cooking Timer",
+        mainHeading: "🔥 Meat Cooking Timer 🔥",
+        minutesLabel: "min",
+        startButton: "Start",
+        resetButton: "Reset",
+        invalidTimeAlert: "Enter valid time!",
+        timerStarted: "Timer started for {minutes} minutes.",
+        minutePassed: "Minute {minute} passed. Time to flip the meat.",
+        cookingComplete: "Cooking complete! You can remove the meat from heat.",
+        minuteTitle: "Cooking Minute",
+        finishTitle: "Cooking Complete"
+      },
+      ru: {
+        pageTitle: "Таймер для готовки мяса",
+        mainHeading: "🔥 Таймер для готовки мяса 🔥",
+        minutesLabel: "мин",
+        startButton: "Старт",
+        resetButton: "Сброс",
+        invalidTimeAlert: "Введите корректное время!",
+        timerStarted: "Таймер запущен на {minutes} минут.",
+        minutePassed: "Прошла {minute} минута. Пора перевернуть мясо.",
+        cookingComplete: "Готовка завершена! Можно снимать мясо с огня.",
+        minuteTitle: "Минутка готовки",
+        finishTitle: "Готовка завершена"
+      }
+    };
+
+    let currentLanguage = 'ru';
     let totalMinutes = 10;
     let remainingSeconds = 0;
     let timerInterval = null;
@@ -82,9 +127,58 @@
       rangeInput.value = mins;
     }
 
-    function speak(text) {
+    function switchLanguage(lang) {
+      currentLanguage = lang;
+      
+      // Save to localStorage
+      localStorage.setItem('preferredLanguage', lang);
+      
+      // Update all elements with data-i18n
+      document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (element.tagName === 'TITLE') {
+          element.textContent = translations[lang][key];
+        } else {
+          element.textContent = translations[lang][key];
+        }
+      });
+      
+      // Update document title
+      document.title = translations[lang].pageTitle;
+      
+      // Update lang attribute
+      document.documentElement.lang = lang;
+      
+      // Update language buttons
+      updateLanguageButtons(lang);
+    }
+
+    function updateLanguageButtons(lang) {
+      document.getElementById('langEn').classList.toggle('active', lang === 'en');
+      document.getElementById('langRu').classList.toggle('active', lang === 'ru');
+    }
+
+    function initLanguage() {
+      // Check saved preference
+      const saved = localStorage.getItem('preferredLanguage');
+      
+      // Or detect browser language
+      const browserLang = navigator.language.startsWith('ru') ? 'ru' : 'en';
+      
+      const lang = saved || browserLang;
+      switchLanguage(lang);
+    }
+
+    function speak(textKey, params = {}) {
+      let text = translations[currentLanguage][textKey];
+      
+      // Replace placeholders
+      Object.keys(params).forEach(key => {
+        text = text.replace(`{${key}}`, params[key]);
+      });
+      
       const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'ru-RU';
+      utter.lang = currentLanguage === 'ru' ? 'ru-RU' : 'en-US';
       utter.volume = 1.0;
       utter.rate = 1.05;
       utter.pitch = 1.2;
@@ -110,26 +204,41 @@
       Notification.requestPermission();
     }
 
-    function notifyMinute(text) {
+    function notifyMinute(minuteCounter) {
+      const text = translations[currentLanguage].minutePassed.replace('{minute}', minuteCounter);
+      const title = translations[currentLanguage].minuteTitle;
+      
       if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type:'MINUTE_NOTIFICATION', text });
+        navigator.serviceWorker.controller.postMessage({
+          type: 'MINUTE_NOTIFICATION',
+          title,
+          text
+        });
       }
     }
-    function notifyFinish(text) {
+
+    function notifyFinish() {
+      const text = translations[currentLanguage].cookingComplete;
+      const title = translations[currentLanguage].finishTitle;
+      
       if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type:'FINISH_NOTIFICATION', text });
+        navigator.serviceWorker.controller.postMessage({
+          type: 'FINISH_NOTIFICATION',
+          title,
+          text
+        });
       }
     }
 
     function startTimer() {
       if (timerInterval) return;
       totalMinutes = parseInt(minutesInput.value);
-      if (isNaN(totalMinutes) || totalMinutes <= 0) return alert('Введите корректное время!');
+      if (isNaN(totalMinutes) || totalMinutes <= 0) return alert(translations[currentLanguage].invalidTimeAlert);
       remainingSeconds = totalMinutes * 60;
       minuteCounter = 0;
       updateDisplay();
       flame.style.display = 'block';
-      speak(`Таймер запущен на ${totalMinutes} минут.`);
+      speak('timerStarted', { minutes: totalMinutes });
       playBeep();
       timerInterval = setInterval(tick, 1000);
     }
@@ -142,8 +251,8 @@
         minuteCounter++;
         playBeep(600, 150);
         playBeep(900, 150);
-        setTimeout(() => speak(`Прошла ${minuteCounter} минута. Пора перевернуть мясо.`), 1000);
-        notifyMinute(`Прошла ${minuteCounter} минута. Пора перевернуть мясо.`);
+        setTimeout(() => speak('minutePassed', { minute: minuteCounter }), 1000);
+        notifyMinute(minuteCounter);
       }
 
       if (remainingSeconds <= 0) {
@@ -153,8 +262,8 @@
         playBeep(700, 200);
         playBeep(1000, 300);
         playBeep(1200, 400);
-        setTimeout(() => speak('Готовка завершена! Можно снимать мясо с огня.'), 1000);
-        notifyFinish('Готовка завершена! Можно снимать мясо с огня.');
+        setTimeout(() => speak('cookingComplete'), 1000);
+        notifyFinish();
       }
     }
 
@@ -172,6 +281,9 @@
       const s = remainingSeconds % 60;
       timerDisplay.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     }
+
+    // --- Initialize language on page load ---
+    window.addEventListener('DOMContentLoaded', initLanguage);
 
     // --- Register service worker ---
     if ('serviceWorker' in navigator) {
