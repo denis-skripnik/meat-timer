@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Таймер для готовки мяса</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+      color: #f5f5f5;
+      text-align: center;
+      padding: 50px;
+      overflow: hidden;
+    }
+    h1 { font-size: 2em; margin-bottom: 20px; }
+    input[type="number"], input[type="range"] { margin: 10px; font-size: 1.2em; }
+    button {
+      background: #333; color: #fff; border: none; border-radius: 8px;
+      padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 1em;
+      transition: background 0.2s;
+    }
+    button:hover { background: #555; }
+    #timer { font-size: 3em; margin-top: 30px; }
+    .flame {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 160px;
+      background: radial-gradient(ellipse at center, #ff6600 0%, transparent 70%);
+      opacity: 0.7; animation: flame 1s infinite alternate; filter: blur(15px);
+      display: none;
+    }
+    @keyframes flame {
+      0% { transform: translateX(-50%) scale(1,1); opacity:0.7; }
+      100% { transform: translateX(-50%) scale(1.3,1.4); opacity:0.3; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔥 Таймер для готовки мяса 🔥</h1>
+
+  <div>
+    <input id="minutesInput" type="number" min="1" max="120" value="10"> мин
+    <br>
+    <input id="rangeInput" type="range" min="1" max="120" value="10">
+  </div>
+
+  <div>
+    <button onclick="setPreset(5)">5</button>
+    <button onclick="setPreset(10)">10</button>
+    <button onclick="setPreset(20)">20</button>
+    <button onclick="setPreset(30)">30</button>
+    <button onclick="setPreset(40)">40</button>
+    <button onclick="setPreset(50)">50</button>
+    <button onclick="setPreset(60)">60</button>
+  </div>
+
+  <div>
+    <button onclick="startTimer()">Старт</button>
+    <button onclick="resetTimer()">Сброс</button>
+  </div>
+
+  <div id="timer">00:00</div>
+  <div class="flame" id="flame"></div>
+
+  <script>
+    let totalMinutes = 10;
+    let remainingSeconds = 0;
+    let timerInterval = null;
+    let minuteCounter = 0;
+
+    const minutesInput = document.getElementById('minutesInput');
+    const rangeInput = document.getElementById('rangeInput');
+    const timerDisplay = document.getElementById('timer');
+    const flame = document.getElementById('flame');
+
+    minutesInput.addEventListener('input', () => { rangeInput.value = minutesInput.value; });
+    rangeInput.addEventListener('input', () => { minutesInput.value = rangeInput.value; });
+
+    function setPreset(mins) {
+      minutesInput.value = mins;
+      rangeInput.value = mins;
+    }
+
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'ru-RU';
+      utter.volume = 1.0;
+      utter.rate = 1.05;
+      utter.pitch = 1.2;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utter);
+    }
+
+    function playBeep(frequency = 880, duration = 200, volume = 1.0) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = frequency;
+      osc.type = "triangle";
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + duration / 1000);
+    }
+
+    // --- PWA Notifications ---
+    if ('Notification' in window && navigator.serviceWorker) {
+      Notification.requestPermission();
+    }
+
+    function notifyMinute(text) {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type:'MINUTE_NOTIFICATION', text });
+      }
+    }
+    function notifyFinish(text) {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type:'FINISH_NOTIFICATION', text });
+      }
+    }
+
+    function startTimer() {
+      if (timerInterval) return;
+      totalMinutes = parseInt(minutesInput.value);
+      if (isNaN(totalMinutes) || totalMinutes <= 0) return alert('Введите корректное время!');
+      remainingSeconds = totalMinutes * 60;
+      minuteCounter = 0;
+      updateDisplay();
+      flame.style.display = 'block';
+      speak(`Таймер запущен на ${totalMinutes} минут.`);
+      playBeep();
+      timerInterval = setInterval(tick, 1000);
+    }
+
+    function tick() {
+      remainingSeconds--;
+      updateDisplay();
+
+      if (remainingSeconds % 60 === 0 && remainingSeconds > 0) {
+        minuteCounter++;
+        playBeep(600, 150);
+        playBeep(900, 150);
+        setTimeout(() => speak(`Прошла ${minuteCounter} минута. Пора перевернуть мясо.`), 1000);
+        notifyMinute(`Прошла ${minuteCounter} минута. Пора перевернуть мясо.`);
+      }
+
+      if (remainingSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        flame.style.display = 'none';
+        playBeep(700, 200);
+        playBeep(1000, 300);
+        playBeep(1200, 400);
+        setTimeout(() => speak('Готовка завершена! Можно снимать мясо с огня.'), 1000);
+        notifyFinish('Готовка завершена! Можно снимать мясо с огня.');
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      remainingSeconds = 0;
+      timerDisplay.textContent = '00:00';
+      flame.style.display = 'none';
+      speechSynthesis.cancel();
+    }
+
+    function updateDisplay() {
+      const m = Math.floor(remainingSeconds / 60);
+      const s = remainingSeconds % 60;
+      timerDisplay.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+
+    // --- Register service worker ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(() => console.log('SW registered'));
+    }
+  </script>
+</body>
+</html>
