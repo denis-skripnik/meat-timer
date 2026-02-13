@@ -74,6 +74,13 @@
     <button onclick="resetTimer()" data-i18n="resetButton">Сброс</button>
   </div>
 
+  <div style="margin-top: 15px;">
+    <label style="cursor: pointer; font-size: 0.9em;">
+      <input type="checkbox" id="wakeLockCheckbox" style="margin-right: 5px;">
+      <span data-i18n="wakeLockLabel">Не выключать экран</span>
+    </label>
+  </div>
+
   <div id="timer">00:00</div>
   <div class="flame" id="flame"></div>
 
@@ -86,6 +93,7 @@
         minutesLabel: "min",
         startButton: "Start",
         resetButton: "Reset",
+        wakeLockLabel: "Keep screen on",
         invalidTimeAlert: "Enter valid time!",
         timerStarted: "Timer started for {minutes} minutes.",
         minutePassed: "Minute {minute} passed. Time to flip the meat.",
@@ -99,6 +107,7 @@
         minutesLabel: "мин",
         startButton: "Старт",
         resetButton: "Сброс",
+        wakeLockLabel: "Не выключать экран",
         invalidTimeAlert: "Введите корректное время!",
         timerStarted: "Таймер запущен на {minutes} минут.",
         minutePassed: "Прошла {minute} минута. Пора перевернуть мясо.",
@@ -113,6 +122,46 @@
     let remainingSeconds = 0;
     let timerInterval = null;
     let minuteCounter = 0;
+    let wakeLock = null;
+    const wakeLockCheckbox = document.getElementById('wakeLockCheckbox');
+
+    async function requestWakeLock() {
+      if (wakeLock) return;
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => {
+            console.log('Wake Lock released');
+            wakeLock = null;
+          });
+        } catch (err) {
+          console.error('Wake Lock error:', err);
+        }
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+    }
+
+    wakeLockCheckbox.addEventListener('change', () => {
+      if (timerInterval) {  // Timer is running
+        if (wakeLockCheckbox.checked) {
+          requestWakeLock();
+        } else {
+          releaseWakeLock();
+        }
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && timerInterval && wakeLockCheckbox.checked) {
+        requestWakeLock();
+      }
+    });
 
     const minutesInput = document.getElementById('minutesInput');
     const rangeInput = document.getElementById('rangeInput');
@@ -199,45 +248,51 @@
       osc.stop(ctx.currentTime + duration / 1000);
     }
 
-    // --- PWA Notifications ---
-    if ('Notification' in window && navigator.serviceWorker) {
-      Notification.requestPermission();
+    // --- Service Worker communication helper ---
+    async function sendToSW(payload) {
+      if (!('serviceWorker' in navigator)) return false;
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const target = navigator.serviceWorker.controller || registration.active;
+        if (target) {
+          target.postMessage(payload);
+          return true;
+        }
+      } catch (e) {
+        console.error('SW send error:', e);
+      }
+      return false;
     }
 
     function notifyMinute(minuteCounter) {
       const text = translations[currentLanguage].minutePassed.replace('{minute}', minuteCounter);
       const title = translations[currentLanguage].minuteTitle;
-      
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'MINUTE_NOTIFICATION',
-          title,
-          text
-        });
-      }
+      sendToSW({ type: 'MINUTE_NOTIFICATION', title, text });
     }
 
     function notifyFinish() {
       const text = translations[currentLanguage].cookingComplete;
       const title = translations[currentLanguage].finishTitle;
-      
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'FINISH_NOTIFICATION',
-          title,
-          text
-        });
-      }
+      sendToSW({ type: 'FINISH_NOTIFICATION', title, text });
     }
 
     function startTimer() {
       if (timerInterval) return;
       totalMinutes = parseInt(minutesInput.value);
       if (isNaN(totalMinutes) || totalMinutes <= 0) return alert(translations[currentLanguage].invalidTimeAlert);
+      
+      // Request notification permission if not already decided
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      
       remainingSeconds = totalMinutes * 60;
       minuteCounter = 0;
       updateDisplay();
       flame.style.display = 'block';
+      if (wakeLockCheckbox.checked) {
+        requestWakeLock();
+      }
       speak('timerStarted', { minutes: totalMinutes });
       playBeep();
       timerInterval = setInterval(tick, 1000);
@@ -258,6 +313,7 @@
       if (remainingSeconds <= 0) {
         clearInterval(timerInterval);
         timerInterval = null;
+        releaseWakeLock();
         flame.style.display = 'none';
         playBeep(700, 200);
         playBeep(1000, 300);
@@ -268,6 +324,7 @@
     }
 
     function resetTimer() {
+      releaseWakeLock();
       clearInterval(timerInterval);
       timerInterval = null;
       remainingSeconds = 0;
@@ -287,7 +344,7 @@
 
     // --- Register service worker ---
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').then(() => console.log('SW registered'));
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).then(() => console.log('SW registered'));
     }
   </script>
 </body>

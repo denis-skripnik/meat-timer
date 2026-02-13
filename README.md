@@ -14,13 +14,21 @@ This is a specialized cooking timer application that combines visual, audio, and
 - **Quick presets**: One-click buttons for common durations (5, 10, 20, 30, 40, 50, 60 minutes)
 - **Real-time countdown**: Live display in MM:SS format
 
-### 🔔 Multi-Modal Alerts
+### 🔒 Wake Lock (Keep Screen On)
+- Optional "Keep screen on" feature to prevent screen lock during timer operation
+- Helps reduce background throttling but does NOT guarantee speech synthesis on all devices/browsers
+- **Limitations**: Not supported in Safari on iOS; works on Android in Chrome and Edge
+
+### Multi-Modal Alerts
 - **Audio beeps**: Web Audio API-generated tones for minute markers and completion
 - **Voice announcements**: English or Russian text-to-speech notifications using Speech Synthesis API
   - Start confirmation: "Timer started for X minutes"
   - Minute reminders: "One minute has passed. Time to flip the meat"
   - Completion alert: "Cooking complete! You can remove the meat from heat"
 - **Push notifications**: Browser notifications via Service Worker (requires permission)
+  - Only ONE notification is shown at a time (new notifications replace the previous one)
+  - Minute updates replace the previous notification; final alert requires interaction
+  - Notifications are delivered via Service Worker; on first load the app ensures the SW is ready before sending messages
   - Persistent notifications with vibration pattern
   - Works even when tab is in background
 
@@ -45,6 +53,7 @@ This is a specialized cooking timer application that combines visual, audio, and
   - Notification API (for push notifications)
   - Web Audio API (for beep sounds)
   - Speech Synthesis API (for voice announcements)
+  - Wake Lock API (to keep screen on during timer)
 - **PWA manifest**: Configured for standalone installation
 - **Service Worker**: Handles notifications and offline capabilities
 
@@ -89,6 +98,18 @@ meat-timer/
 3. Click to install as standalone app
 4. Launch from your device's app drawer or desktop
 
+### Configuring for GitHub Pages Deployment
+
+If you fork this repository and deploy on GitHub Pages:
+
+1. Open `manifest.json`
+2. Change `start_url` and `scope` according to your repository name:
+   ```json
+   "start_url": "/your-repo-name/index.html",
+   "scope": "/your-repo-name/"
+   ```
+3. Commit and push the changes
+
 ## Browser Compatibility
 
 - **Recommended**: Chrome, Edge, Safari, Firefox (latest versions)
@@ -97,6 +118,11 @@ meat-timer/
   - Web Audio API
   - Speech Synthesis API (for voice announcements)
   - Notification API (for push notifications)
+
+**Known Limitations:**
+- Speech synthesis may not work when the screen is locked/off
+- Wake Lock helps keep the screen on but does not guarantee speech on all devices
+- Wake Lock API is not available on iOS Safari
 
 ## Language
 

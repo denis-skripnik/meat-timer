@@ -1,12 +1,13 @@
 {
   "name": "Meat Cooking Timer / Таймер для готовки мяса",
   "short_name": "CookTimer",
-  "start_url": "/index.html",
+  "start_url": "/meat-timer/index.html",
+  "scope": "/meat-timer/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#ff6600",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/meat-timer/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/meat-timer/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

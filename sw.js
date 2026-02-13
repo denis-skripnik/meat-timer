@@ -10,16 +10,21 @@ self.addEventListener('message', event => {
   const data = event.data;
   if (!data) return;
 
-  if (data.type === 'MINUTE_NOTIFICATION') showNotification(data.title, data.text);
-  if (data.type === 'FINISH_NOTIFICATION') showNotification(data.title, data.text);
+  if (data.type === 'MINUTE_NOTIFICATION') {
+    event.waitUntil(showNotification(data.title, data.text));
+  } else if (data.type === 'FINISH_NOTIFICATION') {
+    event.waitUntil(showNotification(data.title, data.text, { requireInteraction: true }));
+  }
 });
 
-function showNotification(title, body) {
-  self.registration.showNotification(title, {
+function showNotification(title, body, options = {}) {
+  const iconUrl = new URL('icon-192.png', self.registration.scope).toString();
+  return self.registration.showNotification(title, {
     body,
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
+    tag: 'meat-timer-notification',
+    icon: iconUrl,
+    badge: iconUrl,
     vibrate: [200, 100, 200],
-    requireInteraction: true
+    requireInteraction: options.requireInteraction || false
   });
 }
