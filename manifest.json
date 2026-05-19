@@ -1,6 +1,6 @@
 {
-  "name": "Meat Cooking Timer / Таймер для готовки мяса",
-  "short_name": "CookTimer",
+  "name": "Meat and Breathing Timer / Таймер мяса и дыхания",
+  "short_name": "CookBreathe",
   "start_url": "/meat-timer/index.html",
   "scope": "/meat-timer/",
   "display": "standalone",

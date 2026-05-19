@@ -1,139 +1,110 @@
-# Meat Cooking Timer 🔥
+# Meat and Breathing Timer 🔥🌬️
 
-A Progressive Web App (PWA) designed to help you cook meat perfectly by providing timed reminders to flip it every minute.
+A small no-framework PWA with two modes:
 
-## Overview
+- meat cooking timer with minute reminders to flip the meat;
+- breathing practice timer with inhale/exhale guidance.
 
-This is a specialized cooking timer application that combines visual, audio, and notification alerts to ensure you never miss the moment to flip your meat while cooking. The app provides minute-by-minute reminders with voice announcements, sound effects, and browser notifications.
+The UI, notifications, and recorded audio prompts support Russian and English.
 
 ## Features
 
-### ⏱️ Timer Functionality
-- **Configurable duration**: Set timer from 1 to 120 minutes
-- **Multiple input methods**: Number input field and range slider
-- **Quick presets**: One-click buttons for common durations (5, 10, 20, 30, 40, 50, 60 minutes)
-- **Real-time countdown**: Live display in MM:SS format
+### Meat cooking
 
-### 🔒 Wake Lock (Keep Screen On)
-- Optional "Keep screen on" feature to prevent screen lock during timer operation
-- Helps reduce background throttling but does NOT guarantee speech synthesis on all devices/browsers
-- **Limitations**: Not supported in Safari on iOS; works on Android in Chrome and Edge
+- Duration from 1 to 120 minutes.
+- Number input, range slider, and quick presets: 5, 10, 20, 30, 40, 50, 60 minutes.
+- One primary toggle button: `Запуск` / `Пауза` or `Launch` / `Pause`.
+- Secondary reset button for clearing the current timer.
+- Minute reminders with tones, recorded MP3 voice prompt, and browser notification.
+- Completion sound, recorded MP3 prompt, and final notification.
+- Optional Wake Lock checkbox to keep the screen on where supported.
 
-### Multi-Modal Alerts
-- **Audio beeps**: Web Audio API-generated tones for minute markers and completion
-- **Voice announcements**: English or Russian text-to-speech notifications using Speech Synthesis API
-  - Start confirmation: "Timer started for X minutes"
-  - Minute reminders: "One minute has passed. Time to flip the meat"
-  - Completion alert: "Cooking complete! You can remove the meat from heat"
-- **Push notifications**: Browser notifications via Service Worker (requires permission)
-  - Only ONE notification is shown at a time (new notifications replace the previous one)
-  - Minute updates replace the previous notification; final alert requires interaction
-  - Notifications are delivered via Service Worker; on first load the app ensures the SW is ready before sending messages
-  - Persistent notifications with vibration pattern
-  - Works even when tab is in background
+### Breathing practice
 
-### 🎨 Visual Design
-- **Dark theme**: Radial gradient background (black to dark gray)
-- **Animated flame effect**: CSS-animated flame appears during active cooking
-- **Responsive layout**: Mobile-friendly centered design
-- **Clean UI**: Minimalist interface with clear controls
+- Separate tab for breathing practices.
+- Practice duration in minutes.
+- Configurable inhale and exhale durations in seconds.
+- One primary toggle button: launch/pause.
+- Calm phase prompts for inhale and exhale.
+- Calm minute sound plus recorded minute prompt.
+- Completion sound, recorded MP3 prompt, and final notification.
 
-### 📱 PWA Capabilities
-- **Installable**: Can be installed as a standalone app on mobile and desktop
-- **Offline-ready**: Service Worker enables offline functionality
-- **Standalone display**: Runs in its own window without browser UI
-- **App icons**: 192x192 and 512x512 PNG icons included
-- **Theme integration**: Custom theme color (#ff6600 - orange/fire color)
+### PWA/offline
 
-## Technical Stack
+- Installable PWA with manifest and icons.
+- Service worker caches the app shell and all MP3 assets for offline use after first load.
+- Browser notifications are routed through the service worker.
 
-- **Pure HTML/CSS/JavaScript**: No frameworks or dependencies
-- **Web APIs used**:
-  - Service Worker API (for PWA and notifications)
-  - Notification API (for push notifications)
-  - Web Audio API (for beep sounds)
-  - Speech Synthesis API (for voice announcements)
-  - Wake Lock API (to keep screen on during timer)
-- **PWA manifest**: Configured for standalone installation
-- **Service Worker**: Handles notifications and offline capabilities
+## Audio prompts
 
-## File Structure
+The app does **not** depend on Web Speech Synthesis for user-facing voice messages. It plays local MP3 files from:
 
+```text
+assets/audio/en/
+assets/audio/ru/
 ```
+
+Current prompt files per language:
+
+- `meat-start.mp3`
+- `meat-minute.mp3`
+- `meat-finish.mp3`
+- `breath-start.mp3`
+- `breath-inhale.mp3`
+- `breath-exhale.mp3`
+- `breath-minute.mp3`
+- `breath-finish.mp3`
+
+### Regenerating audio
+
+Install/use `edge-tts`, then run:
+
+```bash
+node scripts/generate-audio.js
+```
+
+The script writes real MP3 files into `assets/audio/{ru,en}/`. The runtime app only needs the generated MP3 files, not `edge-tts`.
+
+## File structure
+
+```text
 meat-timer/
-├── index.html          # Main application file with UI and logic
-├── manifest.json       # PWA manifest configuration
-├── sw.js              # Service Worker for notifications
-├── icon-192.png       # App icon (192x192)
-├── icon-512.png       # App icon (512x512)
-└── README.md          # This file
+├── assets/audio/en/*.mp3
+├── assets/audio/ru/*.mp3
+├── scripts/generate-audio.js
+├── index.html
+├── manifest.json
+├── sw.js
+├── icon-192.png
+├── icon-512.png
+├── PLAN.md
+└── README.md
 ```
 
-## How It Works
+## Running locally
 
-1. **Set Duration**: Choose cooking time using input field, slider, or preset buttons
-2. **Start Timer**: Click "Старт" (Start) to begin countdown
-3. **Minute Reminders**: Every minute, the app will:
-   - Play a two-tone beep
-   - Announce via voice synthesis (in English and Russian)
-   - Send a browser notification
-   - Remind you to flip the meat
-4. **Completion**: When timer reaches zero:
-   - Plays a three-tone completion melody
-   - Announces cooking is complete
-   - Sends final notification
-   - Hides the flame animation
-5. **Reset**: Click "Сброс" (Reset) to stop and clear the timer
+Because service workers require an HTTP origin, use a local server instead of opening the file directly:
 
-## Usage
+```bash
+python3 -m http.server 8080
+```
 
-### Running Locally
-1. Clone or download this repository
-2. Open `index.html` in a modern web browser
-3. Grant notification permissions when prompted (optional but recommended)
+Then open:
 
-### Installing as PWA
-1. Open the app in Chrome, Edge, or other PWA-compatible browser
-2. Look for "Install" option in browser menu or address bar
-3. Click to install as standalone app
-4. Launch from your device's app drawer or desktop
+```text
+http://localhost:8080/
+```
 
-### Configuring for GitHub Pages Deployment
+## GitHub Pages
 
-If you fork this repository and deploy on GitHub Pages:
+If deploying under a different repository path, update `start_url`, `scope`, and icon paths in `manifest.json`.
 
-1. Open `manifest.json`
-2. Change `start_url` and `scope` according to your repository name:
-   ```json
-   "start_url": "/your-repo-name/index.html",
-   "scope": "/your-repo-name/"
-   ```
-3. Commit and push the changes
+## Browser notes
 
-## Browser Compatibility
-
-- **Recommended**: Chrome, Edge, Safari, Firefox (latest versions)
-- **Required features**:
-  - Service Worker support
-  - Web Audio API
-  - Speech Synthesis API (for voice announcements)
-  - Notification API (for push notifications)
-
-**Known Limitations:**
-- Speech synthesis may not work when the screen is locked/off
-- Wake Lock helps keep the screen on but does not guarantee speech on all devices
-- Wake Lock API is not available on iOS Safari
-
-## Language
-
-The user interface and voice announcements are in **English** and **Russian** (ru-RU), making it ideal for English-speaking  Russian-speaking users. The app title translates to "Timer for Cooking Meat."
-
-## Use Cases
-
-- Grilling steaks or burgers (flip every minute for even cooking)
-- Pan-frying meat cutlets
-- Cooking kebabs or shashlik
-- Any cooking scenario requiring regular flipping intervals
+- Audio playback requires a user gesture; the launch button provides it.
+- Wake Lock is not available in every browser, especially iOS Safari.
+- Background timer precision can still be limited by mobile browsers.
+- Notifications require browser permission.
 
 ## License
 

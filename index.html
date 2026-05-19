@@ -3,346 +3,453 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="pageTitle">Таймер для готовки мяса</title>
+  <title data-i18n="pageTitle">Таймер мяса и дыхания</title>
   <link rel="manifest" href="manifest.json">
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: sans-serif;
       background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
       color: #f5f5f5;
       text-align: center;
-      padding: 50px;
-      overflow: hidden;
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      overflow-x: hidden;
     }
-    h1 { font-size: 2em; margin-bottom: 20px; }
-    input[type="number"], input[type="range"] { margin: 10px; font-size: 1.2em; }
+    main { max-width: 760px; margin: 0 auto; }
+    h1 { font-size: 2em; margin: 48px 0 20px; }
+    h2 { font-size: 1.35em; margin: 18px 0; }
+    label { display: inline-block; margin: 8px; }
+    input[type="number"], input[type="range"] { margin: 10px; font-size: 1.1em; max-width: 220px; }
     button {
       background: #333; color: #fff; border: none; border-radius: 8px;
       padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 1em;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.2s;
     }
     button:hover { background: #555; }
-    #timer { font-size: 3em; margin-top: 30px; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #ffd27a; outline-offset: 3px; }
+    button[aria-selected="true"], button.primary { background: #b84d00; }
+    button.primary { font-size: 1.2em; min-width: 160px; }
+    button.secondary { background: #202020; border: 1px solid #666; }
+    .tabs { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .panel { display: none; border: 1px solid #333; border-radius: 16px; padding: 18px; background: rgba(0,0,0,0.24); }
+    .panel.active { display: block; }
+    .timer { font-size: 3em; margin-top: 24px; font-variant-numeric: tabular-nums; }
+    .phase { font-size: 1.4em; margin-top: 14px; min-height: 1.5em; }
+    .hint { color: #cfcfcf; font-size: 0.92em; }
     .flame {
-      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 120px; height: 160px;
       background: radial-gradient(ellipse at center, #ff6600 0%, transparent 70%);
       opacity: 0.7; animation: flame 1s infinite alternate; filter: blur(15px);
-      display: none;
+      display: none; pointer-events: none;
     }
+    .breath-orb {
+      width: 110px; height: 110px; border-radius: 50%; margin: 20px auto 0;
+      background: radial-gradient(circle, #92d8ff 0%, #246a8c 70%);
+      opacity: 0.85; transform: scale(0.78); transition: transform 1s ease-in-out;
+      box-shadow: 0 0 38px rgba(146,216,255,0.5);
+    }
+    .breath-orb.inhale { transform: scale(1.2); }
+    .breath-orb.exhale { transform: scale(0.72); }
     @keyframes flame {
       0% { transform: translateX(-50%) scale(1,1); opacity:0.7; }
       100% { transform: translateX(-50%) scale(1.3,1.4); opacity:0.3; }
     }
-    #languageSwitcher {
-      position: absolute; top: 10px; right: 10px;
-    }
-    #languageSwitcher button {
-      padding: 5px 10px; font-size: 0.9em; opacity: 0.5;
-    }
-    #languageSwitcher button.active {
-      opacity: 1; background: #555;
-    }
+    #languageSwitcher { position: absolute; top: 10px; right: 10px; }
+    #languageSwitcher button { padding: 5px 10px; font-size: 0.9em; opacity: 0.5; }
+    #languageSwitcher button.active { opacity: 1; background: #555; }
+    .wake-lock { margin-top: 15px; cursor: pointer; font-size: 0.95em; }
   </style>
 </head>
 <body>
-  <div id="languageSwitcher">
-    <button onclick="switchLanguage('en')" id="langEn">🇬🇧 EN</button>
-    <button onclick="switchLanguage('ru')" id="langRu">🇷🇺 RU</button>
+  <div id="languageSwitcher" aria-label="Language">
+    <button type="button" onclick="switchLanguage('en')" id="langEn">🇬🇧 EN</button>
+    <button type="button" onclick="switchLanguage('ru')" id="langRu">🇷🇺 RU</button>
   </div>
 
-  <h1 data-i18n="mainHeading">🔥 Таймер для готовки мяса 🔥</h1>
+  <main>
+    <h1 data-i18n="mainHeading">🔥 Таймер мяса и дыхания 🌬️</h1>
+    <div class="tabs" role="tablist" aria-label="Timer modes">
+      <button type="button" id="meatTab" role="tab" aria-selected="true" aria-controls="meatPanel" onclick="switchMode('meat')" data-i18n="meatTab">Готовка мяса</button>
+      <button type="button" id="breathTab" role="tab" aria-selected="false" aria-controls="breathPanel" onclick="switchMode('breath')" data-i18n="breathTab">Практики дыхания</button>
+    </div>
 
-  <div>
-    <input id="minutesInput" type="number" min="1" max="120" value="10"> <span data-i18n="minutesLabel">мин</span>
-    <br>
-    <input id="rangeInput" type="range" min="1" max="120" value="10">
-  </div>
+    <section id="meatPanel" class="panel active" role="tabpanel" aria-labelledby="meatTab">
+      <h2 data-i18n="meatHeading">Готовка мяса</h2>
+      <div>
+        <label><span data-i18n="durationLabel">Длительность</span>
+          <input id="meatMinutesInput" type="number" min="1" max="120" value="10">
+          <span data-i18n="minutesLabel">мин</span></label><br>
+        <input id="meatRangeInput" aria-label="Meat minutes" type="range" min="1" max="120" value="10">
+      </div>
+      <div aria-label="Meat presets">
+        <button type="button" onclick="setMeatPreset(5)">5</button>
+        <button type="button" onclick="setMeatPreset(10)">10</button>
+        <button type="button" onclick="setMeatPreset(20)">20</button>
+        <button type="button" onclick="setMeatPreset(30)">30</button>
+        <button type="button" onclick="setMeatPreset(40)">40</button>
+        <button type="button" onclick="setMeatPreset(50)">50</button>
+        <button type="button" onclick="setMeatPreset(60)">60</button>
+      </div>
+      <div>
+        <button type="button" id="meatToggleButton" class="primary" onclick="toggleMeatTimer()" data-i18n="launchButton">Запуск</button>
+        <button type="button" class="secondary" onclick="resetMeatTimer()" data-i18n="resetButton">Сброс</button>
+      </div>
+      <label class="wake-lock"><input type="checkbox" id="wakeLockCheckbox"> <span data-i18n="wakeLockLabel">Не выключать экран</span></label>
+      <div id="meatTimer" class="timer" aria-live="polite">00:00</div>
+      <p class="hint" data-i18n="meatHint">Каждую минуту прозвучит напоминание перевернуть мясо.</p>
+    </section>
 
-  <div>
-    <button onclick="setPreset(5)">5</button>
-    <button onclick="setPreset(10)">10</button>
-    <button onclick="setPreset(20)">20</button>
-    <button onclick="setPreset(30)">30</button>
-    <button onclick="setPreset(40)">40</button>
-    <button onclick="setPreset(50)">50</button>
-    <button onclick="setPreset(60)">60</button>
-  </div>
-
-  <div>
-    <button onclick="startTimer()" data-i18n="startButton">Старт</button>
-    <button onclick="resetTimer()" data-i18n="resetButton">Сброс</button>
-  </div>
-
-  <div style="margin-top: 15px;">
-    <label style="cursor: pointer; font-size: 0.9em;">
-      <input type="checkbox" id="wakeLockCheckbox" style="margin-right: 5px;">
-      <span data-i18n="wakeLockLabel">Не выключать экран</span>
-    </label>
-  </div>
-
-  <div id="timer">00:00</div>
-  <div class="flame" id="flame"></div>
+    <section id="breathPanel" class="panel" role="tabpanel" aria-labelledby="breathTab">
+      <h2 data-i18n="breathHeading">Практики дыхания</h2>
+      <div>
+        <label><span data-i18n="practiceDurationLabel">Практика</span>
+          <input id="breathMinutesInput" type="number" min="1" max="120" value="5">
+          <span data-i18n="minutesLabel">мин</span></label>
+        <label><span data-i18n="inhaleLabel">Вдох</span>
+          <input id="inhaleInput" type="number" min="1" max="30" value="4">
+          <span data-i18n="secondsLabel">сек</span></label>
+        <label><span data-i18n="exhaleLabel">Выдох</span>
+          <input id="exhaleInput" type="number" min="1" max="30" value="6">
+          <span data-i18n="secondsLabel">сек</span></label>
+      </div>
+      <div>
+        <button type="button" id="breathToggleButton" class="primary" onclick="toggleBreathTimer()" data-i18n="launchButton">Запуск</button>
+        <button type="button" class="secondary" onclick="resetBreathTimer()" data-i18n="resetButton">Сброс</button>
+      </div>
+      <div id="breathTimer" class="timer" aria-live="polite">00:00</div>
+      <div id="breathPhase" class="phase" aria-live="polite" data-i18n="readyPhase">Готово</div>
+      <div id="breathOrb" class="breath-orb" aria-hidden="true"></div>
+      <p class="hint" data-i18n="breathHint">Звуки подскажут вдох, выдох и каждую минуту практики.</p>
+    </section>
+  </main>
+  <div class="flame" id="flame" aria-hidden="true"></div>
 
   <script>
-    // Translations dictionary
     const translations = {
       en: {
-        pageTitle: "Meat Cooking Timer",
-        mainHeading: "🔥 Meat Cooking Timer 🔥",
-        minutesLabel: "min",
-        startButton: "Start",
-        resetButton: "Reset",
-        wakeLockLabel: "Keep screen on",
-        invalidTimeAlert: "Enter valid time!",
-        timerStarted: "Timer started for {minutes} minutes.",
-        minutePassed: "Minute {minute} passed. Time to flip the meat.",
-        cookingComplete: "Cooking complete! You can remove the meat from heat.",
-        minuteTitle: "Cooking Minute",
-        finishTitle: "Cooking Complete"
+        pageTitle: 'Meat and Breathing Timer', mainHeading: '🔥 Meat and Breathing Timer 🌬️', meatTab: 'Meat cooking', breathTab: 'Breathing practices', meatHeading: 'Meat cooking', breathHeading: 'Breathing practices', durationLabel: 'Duration', practiceDurationLabel: 'Practice', minutesLabel: 'min', secondsLabel: 'sec', inhaleLabel: 'Inhale', exhaleLabel: 'Exhale', launchButton: 'Launch', pauseButton: 'Pause', resetButton: 'Reset', wakeLockLabel: 'Keep screen on', invalidTimeAlert: 'Enter valid time.', meatHint: 'Every minute you will hear a reminder to flip the meat.', breathHint: 'Sounds guide inhale, exhale, and each minute of practice.', readyPhase: 'Ready', inhalePhase: 'Inhale', exhalePhase: 'Exhale', pausedPhase: 'Paused', timerStarted: 'Cooking timer started.', minutePassed: 'One minute passed. Time to flip the meat.', cookingComplete: 'Cooking complete! You can remove the meat from heat.', breathStarted: 'Breathing practice started.', breathMinute: 'One minute passed. Keep breathing calmly.', breathComplete: 'Breathing practice complete.', minuteTitle: 'Timer Minute', finishTitle: 'Timer Complete', breathMinuteTitle: 'Breathing Minute', breathFinishTitle: 'Breathing Complete'
       },
       ru: {
-        pageTitle: "Таймер для готовки мяса",
-        mainHeading: "🔥 Таймер для готовки мяса 🔥",
-        minutesLabel: "мин",
-        startButton: "Старт",
-        resetButton: "Сброс",
-        wakeLockLabel: "Не выключать экран",
-        invalidTimeAlert: "Введите корректное время!",
-        timerStarted: "Таймер запущен на {minutes} минут.",
-        minutePassed: "Прошла {minute} минута. Пора перевернуть мясо.",
-        cookingComplete: "Готовка завершена! Можно снимать мясо с огня.",
-        minuteTitle: "Минутка готовки",
-        finishTitle: "Готовка завершена"
+        pageTitle: 'Таймер мяса и дыхания', mainHeading: '🔥 Таймер мяса и дыхания 🌬️', meatTab: 'Готовка мяса', breathTab: 'Практики дыхания', meatHeading: 'Готовка мяса', breathHeading: 'Практики дыхания', durationLabel: 'Длительность', practiceDurationLabel: 'Практика', minutesLabel: 'мин', secondsLabel: 'сек', inhaleLabel: 'Вдох', exhaleLabel: 'Выдох', launchButton: 'Запуск', pauseButton: 'Пауза', resetButton: 'Сброс', wakeLockLabel: 'Не выключать экран', invalidTimeAlert: 'Введите корректное время.', meatHint: 'Каждую минуту прозвучит напоминание перевернуть мясо.', breathHint: 'Звуки подскажут вдох, выдох и каждую минуту практики.', readyPhase: 'Готово', inhalePhase: 'Вдох', exhalePhase: 'Выдох', pausedPhase: 'Пауза', timerStarted: 'Таймер готовки запущен.', minutePassed: 'Прошла минута. Пора перевернуть мясо.', cookingComplete: 'Готовка завершена! Можно снимать мясо с огня.', breathStarted: 'Практика дыхания началась.', breathMinute: 'Прошла минута. Продолжайте спокойно дышать.', breathComplete: 'Практика дыхания завершена.', minuteTitle: 'Минута таймера', finishTitle: 'Таймер завершён', breathMinuteTitle: 'Минута дыхания', breathFinishTitle: 'Дыхание завершено'
       }
     };
 
+    const audioFiles = {
+      meatStart: 'meat-start.mp3', meatMinute: 'meat-minute.mp3', meatFinish: 'meat-finish.mp3', breathStart: 'breath-start.mp3', breathInhale: 'breath-inhale.mp3', breathExhale: 'breath-exhale.mp3', breathMinute: 'breath-minute.mp3', breathFinish: 'breath-finish.mp3'
+    };
+
     let currentLanguage = 'ru';
-    let totalMinutes = 10;
-    let remainingSeconds = 0;
-    let timerInterval = null;
-    let minuteCounter = 0;
     let wakeLock = null;
+    let meatInterval = null;
+    let meatRemainingSeconds = 0;
+    let meatConfiguredSeconds = 0;
+    let breathInterval = null;
+    let breathRemainingSeconds = 0;
+    let breathConfiguredSeconds = 0;
+    let breathPhase = 'ready';
+    let breathPhaseRemaining = 0;
+
     const wakeLockCheckbox = document.getElementById('wakeLockCheckbox');
-
-    async function requestWakeLock() {
-      if (wakeLock) return;
-      if ('wakeLock' in navigator) {
-        try {
-          wakeLock = await navigator.wakeLock.request('screen');
-          wakeLock.addEventListener('release', () => {
-            console.log('Wake Lock released');
-            wakeLock = null;
-          });
-        } catch (err) {
-          console.error('Wake Lock error:', err);
-        }
-      }
-    }
-
-    function releaseWakeLock() {
-      if (wakeLock) {
-        wakeLock.release();
-        wakeLock = null;
-      }
-    }
-
-    wakeLockCheckbox.addEventListener('change', () => {
-      if (timerInterval) {  // Timer is running
-        if (wakeLockCheckbox.checked) {
-          requestWakeLock();
-        } else {
-          releaseWakeLock();
-        }
-      }
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && timerInterval && wakeLockCheckbox.checked) {
-        requestWakeLock();
-      }
-    });
-
-    const minutesInput = document.getElementById('minutesInput');
-    const rangeInput = document.getElementById('rangeInput');
-    const timerDisplay = document.getElementById('timer');
+    const meatMinutesInput = document.getElementById('meatMinutesInput');
+    const meatRangeInput = document.getElementById('meatRangeInput');
+    const meatTimerDisplay = document.getElementById('meatTimer');
+    const meatToggleButton = document.getElementById('meatToggleButton');
+    const breathMinutesInput = document.getElementById('breathMinutesInput');
+    const inhaleInput = document.getElementById('inhaleInput');
+    const exhaleInput = document.getElementById('exhaleInput');
+    const breathTimerDisplay = document.getElementById('breathTimer');
+    const breathToggleButton = document.getElementById('breathToggleButton');
+    const breathPhaseDisplay = document.getElementById('breathPhase');
+    const breathOrb = document.getElementById('breathOrb');
     const flame = document.getElementById('flame');
 
-    minutesInput.addEventListener('input', () => { rangeInput.value = minutesInput.value; });
-    rangeInput.addEventListener('input', () => { minutesInput.value = rangeInput.value; });
+    meatMinutesInput.addEventListener('input', () => { meatRangeInput.value = meatMinutesInput.value; });
+    meatRangeInput.addEventListener('input', () => { meatMinutesInput.value = meatRangeInput.value; });
+    wakeLockCheckbox.addEventListener('change', () => {
+      if (meatInterval && wakeLockCheckbox.checked) requestWakeLock();
+      if (!wakeLockCheckbox.checked) releaseWakeLock();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && meatInterval && wakeLockCheckbox.checked) requestWakeLock();
+    });
 
-    function setPreset(mins) {
-      minutesInput.value = mins;
-      rangeInput.value = mins;
-    }
+    function t(key) { return translations[currentLanguage][key]; }
 
     function switchLanguage(lang) {
       currentLanguage = lang;
-      
-      // Save to localStorage
       localStorage.setItem('preferredLanguage', lang);
-      
-      // Update all elements with data-i18n
-      document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (element.tagName === 'TITLE') {
-          element.textContent = translations[lang][key];
-        } else {
-          element.textContent = translations[lang][key];
-        }
-      });
-      
-      // Update document title
-      document.title = translations[lang].pageTitle;
-      
-      // Update lang attribute
+      document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.getAttribute('data-i18n')); });
+      document.title = t('pageTitle');
       document.documentElement.lang = lang;
-      
-      // Update language buttons
-      updateLanguageButtons(lang);
-    }
-
-    function updateLanguageButtons(lang) {
       document.getElementById('langEn').classList.toggle('active', lang === 'en');
       document.getElementById('langRu').classList.toggle('active', lang === 'ru');
+      updateToggleButtons();
+      updateBreathPhaseLabel();
     }
 
     function initLanguage() {
-      // Check saved preference
       const saved = localStorage.getItem('preferredLanguage');
-      
-      // Or detect browser language
       const browserLang = navigator.language.startsWith('ru') ? 'ru' : 'en';
-      
-      const lang = saved || browserLang;
-      switchLanguage(lang);
+      switchLanguage(saved || browserLang);
     }
 
-    function speak(textKey, params = {}) {
-      let text = translations[currentLanguage][textKey];
-      
-      // Replace placeholders
-      Object.keys(params).forEach(key => {
-        text = text.replace(`{${key}}`, params[key]);
-      });
-      
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = currentLanguage === 'ru' ? 'ru-RU' : 'en-US';
-      utter.volume = 1.0;
-      utter.rate = 1.05;
-      utter.pitch = 1.2;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utter);
+    function switchMode(mode) {
+      document.getElementById('meatPanel').classList.toggle('active', mode === 'meat');
+      document.getElementById('breathPanel').classList.toggle('active', mode === 'breath');
+      document.getElementById('meatTab').setAttribute('aria-selected', String(mode === 'meat'));
+      document.getElementById('breathTab').setAttribute('aria-selected', String(mode === 'breath'));
     }
 
-    function playBeep(frequency = 880, duration = 200, volume = 1.0) {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function setMeatPreset(mins) {
+      meatMinutesInput.value = mins;
+      meatRangeInput.value = mins;
+    }
+
+    async function requestWakeLock() {
+      if (wakeLock || !('wakeLock' in navigator)) return;
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } catch (err) { console.error('Wake Lock error:', err); }
+    }
+
+    function releaseWakeLock() {
+      if (!wakeLock) return;
+      wakeLock.release();
+      wakeLock = null;
+    }
+
+    function getAudioPath(key) { return `assets/audio/${currentLanguage}/${audioFiles[key]}`; }
+
+    function playRecordedPrompt(key) {
+      const audio = new Audio(getAudioPath(key));
+      audio.volume = 1.0;
+      audio.play().catch(error => console.warn('Audio prompt could not play:', error));
+    }
+
+    function playTone(frequency = 880, duration = 200, volume = 0.7, type = 'triangle') {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.frequency.value = frequency;
-      osc.type = "triangle";
+      osc.type = type;
       gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
       osc.start();
       osc.stop(ctx.currentTime + duration / 1000);
     }
 
-    // --- Service Worker communication helper ---
+    function playCalmMinuteSound() {
+      playTone(392, 550, 0.35, 'sine');
+      setTimeout(() => playTone(523, 550, 0.28, 'sine'), 220);
+    }
+
     async function sendToSW(payload) {
       if (!('serviceWorker' in navigator)) return false;
       try {
         const registration = await navigator.serviceWorker.ready;
         const target = navigator.serviceWorker.controller || registration.active;
-        if (target) {
-          target.postMessage(payload);
-          return true;
-        }
-      } catch (e) {
-        console.error('SW send error:', e);
+        if (!target) return false;
+        target.postMessage(payload);
+        return true;
+      } catch (e) { console.error('SW send error:', e); return false; }
+    }
+
+    function notify(title, text, requireInteraction = false) {
+      sendToSW({ type: 'TIMER_NOTIFICATION', title, text, requireInteraction });
+    }
+
+    function ensureNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    }
+
+    function parsePositiveNumber(input) {
+      const value = Number(input.value);
+      return Number.isFinite(value) && value > 0 ? value : null;
+    }
+
+    function toggleMeatTimer() { meatInterval ? pauseMeatTimer() : startMeatTimer(); }
+
+    function startMeatTimer() {
+      const minutes = parsePositiveNumber(meatMinutesInput);
+      if (!minutes) return alert(t('invalidTimeAlert'));
+      ensureNotificationPermission();
+      if (meatRemainingSeconds <= 0) {
+        meatConfiguredSeconds = Math.round(minutes * 60);
+        meatRemainingSeconds = meatConfiguredSeconds;
+        playRecordedPrompt('meatStart');
       }
-      return false;
-    }
-
-    function notifyMinute(minuteCounter) {
-      const text = translations[currentLanguage].minutePassed.replace('{minute}', minuteCounter);
-      const title = translations[currentLanguage].minuteTitle;
-      sendToSW({ type: 'MINUTE_NOTIFICATION', title, text });
-    }
-
-    function notifyFinish() {
-      const text = translations[currentLanguage].cookingComplete;
-      const title = translations[currentLanguage].finishTitle;
-      sendToSW({ type: 'FINISH_NOTIFICATION', title, text });
-    }
-
-    function startTimer() {
-      if (timerInterval) return;
-      totalMinutes = parseInt(minutesInput.value);
-      if (isNaN(totalMinutes) || totalMinutes <= 0) return alert(translations[currentLanguage].invalidTimeAlert);
-      
-      // Request notification permission if not already decided
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-      
-      remainingSeconds = totalMinutes * 60;
-      minuteCounter = 0;
-      updateDisplay();
+      updateMeatDisplay();
       flame.style.display = 'block';
-      if (wakeLockCheckbox.checked) {
-        requestWakeLock();
-      }
-      speak('timerStarted', { minutes: totalMinutes });
-      playBeep();
-      timerInterval = setInterval(tick, 1000);
+      if (wakeLockCheckbox.checked) requestWakeLock();
+      playTone();
+      meatInterval = setInterval(tickMeatTimer, 1000);
+      updateToggleButtons();
     }
 
-    function tick() {
-      remainingSeconds--;
-      updateDisplay();
-
-      if (remainingSeconds % 60 === 0 && remainingSeconds > 0) {
-        minuteCounter++;
-        playBeep(600, 150);
-        playBeep(900, 150);
-        setTimeout(() => speak('minutePassed', { minute: minuteCounter }), 1000);
-        notifyMinute(minuteCounter);
-      }
-
-      if (remainingSeconds <= 0) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        releaseWakeLock();
-        flame.style.display = 'none';
-        playBeep(700, 200);
-        playBeep(1000, 300);
-        playBeep(1200, 400);
-        setTimeout(() => speak('cookingComplete'), 1000);
-        notifyFinish();
-      }
-    }
-
-    function resetTimer() {
+    function pauseMeatTimer() {
+      clearInterval(meatInterval);
+      meatInterval = null;
       releaseWakeLock();
-      clearInterval(timerInterval);
-      timerInterval = null;
-      remainingSeconds = 0;
-      timerDisplay.textContent = '00:00';
       flame.style.display = 'none';
-      speechSynthesis.cancel();
+      updateToggleButtons();
     }
 
-    function updateDisplay() {
-      const m = Math.floor(remainingSeconds / 60);
-      const s = remainingSeconds % 60;
-      timerDisplay.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    function tickMeatTimer() {
+      meatRemainingSeconds -= 1;
+      updateMeatDisplay();
+      const elapsedSeconds = meatConfiguredSeconds - meatRemainingSeconds;
+      if (elapsedSeconds > 0 && elapsedSeconds % 60 === 0 && meatRemainingSeconds > 0) {
+        playTone(600, 150);
+        setTimeout(() => playTone(900, 150), 180);
+        setTimeout(() => playRecordedPrompt('meatMinute'), 650);
+        notify(t('minuteTitle'), t('minutePassed'));
+      }
+      if (meatRemainingSeconds <= 0) finishMeatTimer();
     }
 
-    // --- Initialize language on page load ---
+    function finishMeatTimer() {
+      clearInterval(meatInterval);
+      meatInterval = null;
+      meatRemainingSeconds = 0;
+      releaseWakeLock();
+      flame.style.display = 'none';
+      playTone(700, 200);
+      setTimeout(() => playTone(1000, 300), 220);
+      setTimeout(() => playTone(1200, 400), 560);
+      setTimeout(() => playRecordedPrompt('meatFinish'), 950);
+      notify(t('finishTitle'), t('cookingComplete'), true);
+      updateMeatDisplay();
+      updateToggleButtons();
+    }
+
+    function resetMeatTimer() {
+      clearInterval(meatInterval);
+      meatInterval = null;
+      meatRemainingSeconds = 0;
+      meatConfiguredSeconds = 0;
+      releaseWakeLock();
+      flame.style.display = 'none';
+      updateMeatDisplay(0);
+      updateToggleButtons();
+    }
+
+    function updateMeatDisplay(value = meatRemainingSeconds) { meatTimerDisplay.textContent = formatTime(value); }
+
+    function toggleBreathTimer() { breathInterval ? pauseBreathTimer() : startBreathTimer(); }
+
+    function startBreathTimer() {
+      const minutes = parsePositiveNumber(breathMinutesInput);
+      const inhaleSeconds = parsePositiveNumber(inhaleInput);
+      const exhaleSeconds = parsePositiveNumber(exhaleInput);
+      if (!minutes || !inhaleSeconds || !exhaleSeconds) return alert(t('invalidTimeAlert'));
+      ensureNotificationPermission();
+      if (breathRemainingSeconds <= 0) {
+        breathConfiguredSeconds = Math.round(minutes * 60);
+        breathRemainingSeconds = breathConfiguredSeconds;
+        playRecordedPrompt('breathStart');
+        setTimeout(() => startBreathPhase('inhale'), 650);
+      } else {
+        applyBreathPhaseVisuals();
+      }
+      breathInterval = setInterval(tickBreathTimer, 1000);
+      updateToggleButtons();
+    }
+
+    function pauseBreathTimer() {
+      clearInterval(breathInterval);
+      breathInterval = null;
+      breathOrb.classList.remove('inhale', 'exhale');
+      breathPhaseDisplay.textContent = t('pausedPhase');
+      updateToggleButtons();
+    }
+
+    function tickBreathTimer() {
+      breathRemainingSeconds -= 1;
+      breathPhaseRemaining -= 1;
+      updateBreathDisplay();
+      const elapsedSeconds = breathConfiguredSeconds - breathRemainingSeconds;
+      if (elapsedSeconds > 0 && elapsedSeconds % 60 === 0 && breathRemainingSeconds > 0) {
+        playCalmMinuteSound();
+        setTimeout(() => playRecordedPrompt('breathMinute'), 650);
+        notify(t('breathMinuteTitle'), t('breathMinute'));
+      }
+      if (breathRemainingSeconds <= 0) return finishBreathTimer();
+      if (breathPhaseRemaining <= 0) startBreathPhase(breathPhase === 'inhale' ? 'exhale' : 'inhale');
+    }
+
+    function startBreathPhase(phase) {
+      breathPhase = phase;
+      breathPhaseRemaining = Math.round(parsePositiveNumber(phase === 'inhale' ? inhaleInput : exhaleInput));
+      updateBreathPhaseLabel();
+      applyBreathPhaseVisuals();
+      playRecordedPrompt(phase === 'inhale' ? 'breathInhale' : 'breathExhale');
+    }
+
+    function applyBreathPhaseVisuals() {
+      breathOrb.classList.toggle('inhale', breathPhase === 'inhale');
+      breathOrb.classList.toggle('exhale', breathPhase === 'exhale');
+      updateBreathPhaseLabel();
+    }
+
+    function finishBreathTimer() {
+      clearInterval(breathInterval);
+      breathInterval = null;
+      breathRemainingSeconds = 0;
+      breathConfiguredSeconds = 0;
+      breathPhase = 'ready';
+      breathPhaseRemaining = 0;
+      breathOrb.classList.remove('inhale', 'exhale');
+      playCalmMinuteSound();
+      setTimeout(() => playRecordedPrompt('breathFinish'), 650);
+      notify(t('breathFinishTitle'), t('breathComplete'), true);
+      updateBreathDisplay();
+      updateBreathPhaseLabel();
+      updateToggleButtons();
+    }
+
+    function resetBreathTimer() {
+      clearInterval(breathInterval);
+      breathInterval = null;
+      breathRemainingSeconds = 0;
+      breathConfiguredSeconds = 0;
+      breathPhase = 'ready';
+      breathPhaseRemaining = 0;
+      breathOrb.classList.remove('inhale', 'exhale');
+      updateBreathDisplay(0);
+      updateBreathPhaseLabel();
+      updateToggleButtons();
+    }
+
+    function updateBreathDisplay(value = breathRemainingSeconds) { breathTimerDisplay.textContent = formatTime(value); }
+
+    function updateBreathPhaseLabel() {
+      if (breathPhase === 'inhale') breathPhaseDisplay.textContent = t('inhalePhase');
+      else if (breathPhase === 'exhale') breathPhaseDisplay.textContent = t('exhalePhase');
+      else breathPhaseDisplay.textContent = t('readyPhase');
+    }
+
+    function updateToggleButtons() {
+      meatToggleButton.textContent = meatInterval ? t('pauseButton') : t('launchButton');
+      breathToggleButton.textContent = breathInterval ? t('pauseButton') : t('launchButton');
+    }
+
+    function formatTime(totalSeconds) {
+      const safeSeconds = Math.max(0, Math.round(totalSeconds));
+      const m = Math.floor(safeSeconds / 60);
+      const s = safeSeconds % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
     window.addEventListener('DOMContentLoaded', initLanguage);
 
-    // --- Register service worker ---
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js', { scope: './' }).then(() => console.log('SW registered'));
     }
