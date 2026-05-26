@@ -46,14 +46,11 @@ assets/audio/ru/
 
 Current prompt files per language:
 
-- `meat-start.mp3`
-- `meat-minute.mp3`
-- `meat-finish.mp3`
-- `breath-start.mp3`
-- `breath-inhale.mp3`
-- `breath-exhale.mp3`
-- `breath-minute.mp3`
-- `breath-finish.mp3`
+- fixed prompts: `meat-start.mp3`, `meat-finish.mp3`, `breath-start.mp3`, `breath-inhale.mp3`, `breath-exhale.mp3`, `breath-finish.mp3`
+- compatibility minute prompts: `meat-minute.mp3`, `breath-minute.mp3`
+- composable minute prompts: elapsed-word files, minute-form files, action files, and `number-1.mp3` through `number-120.mp3`
+
+Minute reminders are assembled from local audio fragments, for example: “Прошло десять минут. Пора перевернуть мясо.” This keeps the app offline-friendly without generating one full sentence per minute/action combination.
 
 ### Regenerating audio
 

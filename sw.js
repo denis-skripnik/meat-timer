@@ -1,5 +1,35 @@
-const CACHE_NAME = 'meat-breath-timer-v3';
+const CACHE_NAME = 'meat-breath-timer-v4';
 const OFFLINE_URL = './index.html';
+
+function buildMinuteAudioAssets() {
+  const common = [
+    'meat-start.mp3',
+    'meat-minute.mp3',
+    'meat-finish.mp3',
+    'breath-start.mp3',
+    'breath-inhale.mp3',
+    'breath-exhale.mp3',
+    'breath-minute.mp3',
+    'breath-finish.mp3',
+    'minute-one.mp3',
+    'minute-many.mp3',
+    'meat-minute-action.mp3',
+    'breath-minute-action.mp3'
+  ];
+  const byLanguage = {
+    en: ['minute-elapsed.mp3'],
+    ru: ['minute-elapsed-one.mp3', 'minute-elapsed-many.mp3', 'minute-few.mp3']
+  };
+  const assets = [];
+
+  for (const lang of ['en', 'ru']) {
+    for (const fileName of [...common, ...byLanguage[lang]]) assets.push(`./assets/audio/${lang}/${fileName}`);
+    for (let minute = 1; minute <= 120; minute += 1) assets.push(`./assets/audio/${lang}/number-${minute}.mp3`);
+  }
+
+  return assets;
+}
+
 const ASSETS = [
   './',
   OFFLINE_URL,
@@ -7,22 +37,7 @@ const ASSETS = [
   './sw.js',
   './icon-192.png',
   './icon-512.png',
-  './assets/audio/en/meat-start.mp3',
-  './assets/audio/en/meat-minute.mp3',
-  './assets/audio/en/meat-finish.mp3',
-  './assets/audio/en/breath-start.mp3',
-  './assets/audio/en/breath-inhale.mp3',
-  './assets/audio/en/breath-exhale.mp3',
-  './assets/audio/en/breath-minute.mp3',
-  './assets/audio/en/breath-finish.mp3',
-  './assets/audio/ru/meat-start.mp3',
-  './assets/audio/ru/meat-minute.mp3',
-  './assets/audio/ru/meat-finish.mp3',
-  './assets/audio/ru/breath-start.mp3',
-  './assets/audio/ru/breath-inhale.mp3',
-  './assets/audio/ru/breath-exhale.mp3',
-  './assets/audio/ru/breath-minute.mp3',
-  './assets/audio/ru/breath-finish.mp3'
+  ...buildMinuteAudioAssets()
 ];
 
 self.addEventListener('install', event => {
