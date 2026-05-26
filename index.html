@@ -61,6 +61,11 @@
     #languageSwitcher button { padding: 5px 10px; font-size: 0.9em; opacity: 0.5; }
     #languageSwitcher button.active { opacity: 1; background: #555; }
     .wake-lock { margin-top: 15px; cursor: pointer; font-size: 0.95em; }
+    .update-banner {
+      display: none; margin: 16px auto; max-width: 760px; border: 1px solid #87620f;
+      border-radius: 12px; padding: 12px; background: rgba(255, 210, 122, 0.12);
+    }
+    .update-banner.visible { display: block; }
   </style>
 </head>
 <body>
@@ -125,15 +130,19 @@
       <p class="hint" data-i18n="breathHint">Звуки подскажут вдох, выдох и каждую минуту практики.</p>
     </section>
   </main>
+  <div id="updateBanner" class="update-banner" role="status" aria-live="polite">
+    <span data-i18n="updateAvailable">Доступна новая версия приложения.</span>
+    <button type="button" class="primary" onclick="applyAppUpdate()" data-i18n="updateButton">Обновить приложение</button>
+  </div>
   <div class="flame" id="flame" aria-hidden="true"></div>
 
   <script>
     const translations = {
       en: {
-        pageTitle: 'Meat and Breathing Timer', mainHeading: '🔥 Meat and Breathing Timer 🌬️', meatTab: 'Meat cooking', breathTab: 'Breathing practices', meatHeading: 'Meat cooking', breathHeading: 'Breathing practices', durationLabel: 'Duration', practiceDurationLabel: 'Practice', minutesLabel: 'min', secondsLabel: 'sec', inhaleLabel: 'Inhale', exhaleLabel: 'Exhale', launchButton: 'Launch', pauseButton: 'Pause', resetButton: 'Reset', wakeLockLabel: 'Keep screen on', invalidTimeAlert: 'Enter valid time.', meatHint: 'Every minute you will hear a reminder to flip the meat.', breathHint: 'Sounds guide inhale, exhale, and each minute of practice.', readyPhase: 'Ready', inhalePhase: 'Inhale', exhalePhase: 'Exhale', pausedPhase: 'Paused', timerStarted: 'Cooking timer started.', minutePassed: 'One minute passed. Time to flip the meat.', meatMinuteActionText: 'Time to flip the meat.', breathMinuteActionText: 'Keep breathing calmly.', cookingComplete: 'Cooking complete! You can remove the meat from heat.', breathStarted: 'Breathing practice started.', breathMinute: 'One minute passed. Keep breathing calmly.', breathComplete: 'Breathing practice complete.', minuteTitle: 'Timer Minute', finishTitle: 'Timer Complete', breathMinuteTitle: 'Breathing Minute', breathFinishTitle: 'Breathing Complete'
+        pageTitle: 'Meat and Breathing Timer', mainHeading: '🔥 Meat and Breathing Timer 🌬️', meatTab: 'Meat cooking', breathTab: 'Breathing practices', meatHeading: 'Meat cooking', breathHeading: 'Breathing practices', durationLabel: 'Duration', practiceDurationLabel: 'Practice', minutesLabel: 'min', secondsLabel: 'sec', inhaleLabel: 'Inhale', exhaleLabel: 'Exhale', launchButton: 'Launch', pauseButton: 'Pause', resetButton: 'Reset', wakeLockLabel: 'Keep screen on', invalidTimeAlert: 'Enter valid time.', meatHint: 'Every minute you will hear a reminder to flip the meat.', breathHint: 'Sounds guide inhale, exhale, and each minute of practice.', readyPhase: 'Ready', inhalePhase: 'Inhale', exhalePhase: 'Exhale', pausedPhase: 'Paused', timerStarted: 'Cooking timer started.', minutePassed: 'One minute passed. Time to flip the meat.', meatMinuteActionText: 'Time to flip the meat.', breathMinuteActionText: 'Keep breathing calmly.', cookingComplete: 'Cooking complete! You can remove the meat from heat.', breathStarted: 'Breathing practice started.', breathMinute: 'One minute passed. Keep breathing calmly.', breathComplete: 'Breathing practice complete.', minuteTitle: 'Timer Minute', finishTitle: 'Timer Complete', breathMinuteTitle: 'Breathing Minute', breathFinishTitle: 'Breathing Complete', updateAvailable: 'A new app version is available.', updateButton: 'Update app'
       },
       ru: {
-        pageTitle: 'Таймер мяса и дыхания', mainHeading: '🔥 Таймер мяса и дыхания 🌬️', meatTab: 'Готовка мяса', breathTab: 'Практики дыхания', meatHeading: 'Готовка мяса', breathHeading: 'Практики дыхания', durationLabel: 'Длительность', practiceDurationLabel: 'Практика', minutesLabel: 'мин', secondsLabel: 'сек', inhaleLabel: 'Вдох', exhaleLabel: 'Выдох', launchButton: 'Запуск', pauseButton: 'Пауза', resetButton: 'Сброс', wakeLockLabel: 'Не выключать экран', invalidTimeAlert: 'Введите корректное время.', meatHint: 'Каждую минуту прозвучит напоминание перевернуть мясо.', breathHint: 'Звуки подскажут вдох, выдох и каждую минуту практики.', readyPhase: 'Готово', inhalePhase: 'Вдох', exhalePhase: 'Выдох', pausedPhase: 'Пауза', timerStarted: 'Таймер готовки запущен.', minutePassed: 'Прошла минута. Пора перевернуть мясо.', meatMinuteActionText: 'Пора перевернуть мясо.', breathMinuteActionText: 'Продолжайте спокойно дышать.', cookingComplete: 'Готовка завершена! Можно снимать мясо с огня.', breathStarted: 'Практика дыхания началась.', breathMinute: 'Прошла минута. Продолжайте спокойно дышать.', breathComplete: 'Практика дыхания завершена.', minuteTitle: 'Минута таймера', finishTitle: 'Таймер завершён', breathMinuteTitle: 'Минута дыхания', breathFinishTitle: 'Дыхание завершено'
+        pageTitle: 'Таймер мяса и дыхания', mainHeading: '🔥 Таймер мяса и дыхания 🌬️', meatTab: 'Готовка мяса', breathTab: 'Практики дыхания', meatHeading: 'Готовка мяса', breathHeading: 'Практики дыхания', durationLabel: 'Длительность', practiceDurationLabel: 'Практика', minutesLabel: 'мин', secondsLabel: 'сек', inhaleLabel: 'Вдох', exhaleLabel: 'Выдох', launchButton: 'Запуск', pauseButton: 'Пауза', resetButton: 'Сброс', wakeLockLabel: 'Не выключать экран', invalidTimeAlert: 'Введите корректное время.', meatHint: 'Каждую минуту прозвучит напоминание перевернуть мясо.', breathHint: 'Звуки подскажут вдох, выдох и каждую минуту практики.', readyPhase: 'Готово', inhalePhase: 'Вдох', exhalePhase: 'Выдох', pausedPhase: 'Пауза', timerStarted: 'Таймер готовки запущен.', minutePassed: 'Прошла минута. Пора перевернуть мясо.', meatMinuteActionText: 'Пора перевернуть мясо.', breathMinuteActionText: 'Продолжайте спокойно дышать.', cookingComplete: 'Готовка завершена! Можно снимать мясо с огня.', breathStarted: 'Практика дыхания началась.', breathMinute: 'Прошла минута. Продолжайте спокойно дышать.', breathComplete: 'Практика дыхания завершена.', minuteTitle: 'Минута таймера', finishTitle: 'Таймер завершён', breathMinuteTitle: 'Минута дыхания', breathFinishTitle: 'Дыхание завершено', updateAvailable: 'Доступна новая версия приложения.', updateButton: 'Обновить приложение'
       }
     };
 
@@ -165,6 +174,9 @@
     const breathPhaseDisplay = document.getElementById('breathPhase');
     const breathOrb = document.getElementById('breathOrb');
     const flame = document.getElementById('flame');
+    const updateBanner = document.getElementById('updateBanner');
+    let pendingServiceWorker = null;
+    let isRefreshingAfterUpdate = false;
 
     meatMinutesInput.addEventListener('input', () => { meatRangeInput.value = meatMinutesInput.value; });
     meatRangeInput.addEventListener('input', () => { meatMinutesInput.value = meatRangeInput.value; });
@@ -513,8 +525,41 @@
 
     window.addEventListener('DOMContentLoaded', initLanguage);
 
+    function showUpdateBanner(worker) {
+      pendingServiceWorker = worker;
+      updateBanner.classList.add('visible');
+    }
+
+    function applyAppUpdate() {
+      if (!pendingServiceWorker) return;
+      pendingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js', { scope: './' }).then(() => console.log('SW registered'));
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).then(registration => {
+        console.log('SW registered');
+
+        if (registration.waiting) showUpdateBanner(registration.waiting);
+
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(newWorker);
+          });
+        });
+      });
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (isRefreshingAfterUpdate) return;
+        isRefreshingAfterUpdate = true;
+        window.location.reload();
+      });
+
+      window.addEventListener('online', () => {
+        navigator.serviceWorker.ready.then(registration => registration.update());
+      });
     }
   </script>
 </body>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meat-breath-timer-v4';
+const CACHE_NAME = 'meat-breath-timer-v5';
 const OFFLINE_URL = './index.html';
 
 function buildMinuteAudioAssets() {
@@ -80,6 +80,11 @@ self.addEventListener('fetch', event => {
 self.addEventListener('message', event => {
   const data = event.data;
   if (!data) return;
+
+  if (data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
 
   if (data.type === 'TIMER_NOTIFICATION') {
     event.waitUntil(showNotification(data.title, data.text, { requireInteraction: data.requireInteraction }));
