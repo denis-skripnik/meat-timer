@@ -1,7 +1,8 @@
-const CACHE_NAME = 'meat-breath-timer-v2';
+const CACHE_NAME = 'meat-breath-timer-v3';
+const OFFLINE_URL = './index.html';
 const ASSETS = [
   './',
-  './index.html',
+  OFFLINE_URL,
   './manifest.json',
   './sw.js',
   './icon-192.png',
@@ -42,8 +43,22 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.match(event.request, { ignoreSearch: true }).then(cached => {
+      if (cached) return cached;
+
+      return fetch(event.request).then(response => {
+        if (!response || response.status !== 200 || response.type === 'error') return response;
+
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      }).catch(() => {
+        if (event.request.mode === 'navigate') return caches.match(OFFLINE_URL);
+        return Response.error();
+      });
+    })
   );
 });
 
