@@ -13,6 +13,8 @@ The UI, notifications, and recorded audio prompts support Russian and English.
 
 - Duration from 1 to 120 minutes.
 - Number input, range slider, and quick presets: 5, 10, 20, 30, 40, 50, 60 minutes.
+- Quick presets are inside a collapsible `Quick choices` / `Быстрый выбор` section so the page stays compact for screen-reader users.
+- The selected duration is saved locally and restored on the next visit.
 - One primary toggle button: `Запуск` / `Пауза` or `Launch` / `Pause`.
 - Secondary reset button for clearing the current timer.
 - Minute reminders with tones, recorded MP3 voice prompt, and browser notification.
@@ -22,8 +24,10 @@ The UI, notifications, and recorded audio prompts support Russian and English.
 ### Breathing practice
 
 - Separate tab for breathing practices.
-- Practice duration in minutes.
+- Practice duration in minutes, with quick presets in a collapsible section.
 - Configurable inhale and exhale durations in seconds.
+- Inhale and exhale quick presets include 1, 2, 3, 4, 5, 6, 7, 8, 9, and 10 seconds.
+- Practice, inhale, and exhale values are saved locally and restored on the next visit.
 - One primary toggle button: launch/pause.
 - Calm phase prompts for inhale and exhale.
 - Calm minute sound plus recorded minute prompt.
@@ -69,6 +73,7 @@ meat-timer/
 ├── assets/audio/en/*.mp3
 ├── assets/audio/ru/*.mp3
 ├── scripts/generate-audio.js
+├── scripts/smoke-check.js
 ├── index.html
 ├── manifest.json
 ├── sw.js
@@ -91,6 +96,16 @@ Then open:
 ```text
 http://localhost:8080/
 ```
+
+## Validation
+
+Run the static smoke check after UI or service-worker changes:
+
+```bash
+node scripts/smoke-check.js
+```
+
+The check parses the inline app script, parses `sw.js`, and verifies the accessible collapsible preset controls plus saved-setting hooks.
 
 ## GitHub Pages
 

@@ -38,6 +38,13 @@
     .timer { font-size: 3em; margin-top: 24px; font-variant-numeric: tabular-nums; }
     .phase { font-size: 1.4em; margin-top: 14px; min-height: 1.5em; }
     .hint { color: #cfcfcf; font-size: 0.92em; }
+    .preset-details {
+      margin: 10px auto 14px; max-width: 560px; text-align: left;
+      border: 1px solid #444; border-radius: 12px; background: rgba(255,255,255,0.04);
+    }
+    .preset-details summary { cursor: pointer; padding: 12px 14px; font-weight: 700; }
+    .preset-buttons { padding: 0 10px 12px; text-align: center; }
+    .preset-buttons button { min-width: 52px; }
     .flame {
       position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 120px; height: 160px;
@@ -89,15 +96,18 @@
           <span data-i18n="minutesLabel">мин</span></label><br>
         <input id="meatRangeInput" aria-label="Meat minutes" type="range" min="1" max="120" value="10">
       </div>
-      <div aria-label="Meat presets">
-        <button type="button" onclick="setMeatPreset(5)">5</button>
-        <button type="button" onclick="setMeatPreset(10)">10</button>
-        <button type="button" onclick="setMeatPreset(20)">20</button>
-        <button type="button" onclick="setMeatPreset(30)">30</button>
-        <button type="button" onclick="setMeatPreset(40)">40</button>
-        <button type="button" onclick="setMeatPreset(50)">50</button>
-        <button type="button" onclick="setMeatPreset(60)">60</button>
-      </div>
+      <details id="meatPresetControls" class="preset-details">
+        <summary data-i18n="presetSummary">Быстрый выбор</summary>
+        <div class="preset-buttons" aria-label="Meat presets">
+          <button type="button" onclick="setMeatPreset(5)">5</button>
+          <button type="button" onclick="setMeatPreset(10)">10</button>
+          <button type="button" onclick="setMeatPreset(20)">20</button>
+          <button type="button" onclick="setMeatPreset(30)">30</button>
+          <button type="button" onclick="setMeatPreset(40)">40</button>
+          <button type="button" onclick="setMeatPreset(50)">50</button>
+          <button type="button" onclick="setMeatPreset(60)">60</button>
+        </div>
+      </details>
       <div>
         <button type="button" id="meatToggleButton" class="primary" onclick="toggleMeatTimer()" data-i18n="launchButton">Запуск</button>
         <button type="button" class="secondary" onclick="resetMeatTimer()" data-i18n="resetButton">Сброс</button>
@@ -113,12 +123,55 @@
         <label><span data-i18n="practiceDurationLabel">Практика</span>
           <input id="breathMinutesInput" type="number" min="1" max="120" value="5">
           <span data-i18n="minutesLabel">мин</span></label>
+        <details id="breathMinutesPresetControls" class="preset-details">
+          <summary data-i18n="presetSummary">Быстрый выбор</summary>
+          <div class="preset-buttons" aria-label="Breathing practice minute presets">
+            <button type="button" onclick="setBreathPreset('minutes', 1)">1</button>
+            <button type="button" onclick="setBreathPreset('minutes', 2)">2</button>
+            <button type="button" onclick="setBreathPreset('minutes', 3)">3</button>
+            <button type="button" onclick="setBreathPreset('minutes', 5)">5</button>
+            <button type="button" onclick="setBreathPreset('minutes', 10)">10</button>
+            <button type="button" onclick="setBreathPreset('minutes', 15)">15</button>
+            <button type="button" onclick="setBreathPreset('minutes', 20)">20</button>
+            <button type="button" onclick="setBreathPreset('minutes', 30)">30</button>
+          </div>
+        </details>
         <label><span data-i18n="inhaleLabel">Вдох</span>
           <input id="inhaleInput" type="number" min="1" max="30" value="4">
           <span data-i18n="secondsLabel">сек</span></label>
+        <details id="inhalePresetControls" class="preset-details">
+          <summary data-i18n="presetSummary">Быстрый выбор</summary>
+          <div class="preset-buttons" aria-label="Inhale second presets">
+            <button type="button" onclick="setBreathPreset('inhale', 1)">1</button>
+            <button type="button" onclick="setBreathPreset('inhale', 2)">2</button>
+            <button type="button" onclick="setBreathPreset('inhale', 3)">3</button>
+            <button type="button" onclick="setBreathPreset('inhale', 4)">4</button>
+            <button type="button" onclick="setBreathPreset('inhale', 5)">5</button>
+            <button type="button" onclick="setBreathPreset('inhale', 6)">6</button>
+            <button type="button" onclick="setBreathPreset('inhale', 7)">7</button>
+            <button type="button" onclick="setBreathPreset('inhale', 8)">8</button>
+            <button type="button" onclick="setBreathPreset('inhale', 9)">9</button>
+            <button type="button" onclick="setBreathPreset('inhale', 10)">10</button>
+          </div>
+        </details>
         <label><span data-i18n="exhaleLabel">Выдох</span>
           <input id="exhaleInput" type="number" min="1" max="30" value="6">
           <span data-i18n="secondsLabel">сек</span></label>
+        <details id="exhalePresetControls" class="preset-details">
+          <summary data-i18n="presetSummary">Быстрый выбор</summary>
+          <div class="preset-buttons" aria-label="Exhale second presets">
+            <button type="button" onclick="setBreathPreset('exhale', 1)">1</button>
+            <button type="button" onclick="setBreathPreset('exhale', 2)">2</button>
+            <button type="button" onclick="setBreathPreset('exhale', 3)">3</button>
+            <button type="button" onclick="setBreathPreset('exhale', 4)">4</button>
+            <button type="button" onclick="setBreathPreset('exhale', 5)">5</button>
+            <button type="button" onclick="setBreathPreset('exhale', 6)">6</button>
+            <button type="button" onclick="setBreathPreset('exhale', 7)">7</button>
+            <button type="button" onclick="setBreathPreset('exhale', 8)">8</button>
+            <button type="button" onclick="setBreathPreset('exhale', 9)">9</button>
+            <button type="button" onclick="setBreathPreset('exhale', 10)">10</button>
+          </div>
+        </details>
       </div>
       <div>
         <button type="button" id="breathToggleButton" class="primary" onclick="toggleBreathTimer()" data-i18n="launchButton">Запуск</button>
@@ -139,10 +192,10 @@
   <script>
     const translations = {
       en: {
-        pageTitle: 'Meat and Breathing Timer', mainHeading: '🔥 Meat and Breathing Timer 🌬️', meatTab: 'Meat cooking', breathTab: 'Breathing practices', meatHeading: 'Meat cooking', breathHeading: 'Breathing practices', durationLabel: 'Duration', practiceDurationLabel: 'Practice', minutesLabel: 'min', secondsLabel: 'sec', inhaleLabel: 'Inhale', exhaleLabel: 'Exhale', launchButton: 'Launch', pauseButton: 'Pause', resetButton: 'Reset', wakeLockLabel: 'Keep screen on', invalidTimeAlert: 'Enter valid time.', meatHint: 'Every minute you will hear a reminder to flip the meat.', breathHint: 'Sounds guide inhale, exhale, and each minute of practice.', readyPhase: 'Ready', inhalePhase: 'Inhale', exhalePhase: 'Exhale', pausedPhase: 'Paused', timerStarted: 'Cooking timer started.', minutePassed: 'One minute passed. Time to flip the meat.', meatMinuteActionText: 'Time to flip the meat.', breathMinuteActionText: 'Keep breathing calmly.', cookingComplete: 'Cooking complete! You can remove the meat from heat.', breathStarted: 'Breathing practice started.', breathMinute: 'One minute passed. Keep breathing calmly.', breathComplete: 'Breathing practice complete.', minuteTitle: 'Timer Minute', finishTitle: 'Timer Complete', breathMinuteTitle: 'Breathing Minute', breathFinishTitle: 'Breathing Complete', updateAvailable: 'A new app version is available.', updateButton: 'Update app'
+        pageTitle: 'Meat and Breathing Timer', mainHeading: '🔥 Meat and Breathing Timer 🌬️', meatTab: 'Meat cooking', breathTab: 'Breathing practices', meatHeading: 'Meat cooking', breathHeading: 'Breathing practices', durationLabel: 'Duration', practiceDurationLabel: 'Practice', minutesLabel: 'min', secondsLabel: 'sec', inhaleLabel: 'Inhale', exhaleLabel: 'Exhale', presetSummary: 'Quick choices', launchButton: 'Launch', pauseButton: 'Pause', resetButton: 'Reset', wakeLockLabel: 'Keep screen on', invalidTimeAlert: 'Enter valid time.', meatHint: 'Every minute you will hear a reminder to flip the meat.', breathHint: 'Sounds guide inhale, exhale, and each minute of practice.', readyPhase: 'Ready', inhalePhase: 'Inhale', exhalePhase: 'Exhale', pausedPhase: 'Paused', timerStarted: 'Cooking timer started.', minutePassed: 'One minute passed. Time to flip the meat.', meatMinuteActionText: 'Time to flip the meat.', breathMinuteActionText: 'Keep breathing calmly.', cookingComplete: 'Cooking complete! You can remove the meat from heat.', breathStarted: 'Breathing practice started.', breathMinute: 'One minute passed. Keep breathing calmly.', breathComplete: 'Breathing practice complete.', minuteTitle: 'Timer Minute', finishTitle: 'Timer Complete', breathMinuteTitle: 'Breathing Minute', breathFinishTitle: 'Breathing Complete', updateAvailable: 'A new app version is available.', updateButton: 'Update app'
       },
       ru: {
-        pageTitle: 'Таймер мяса и дыхания', mainHeading: '🔥 Таймер мяса и дыхания 🌬️', meatTab: 'Готовка мяса', breathTab: 'Практики дыхания', meatHeading: 'Готовка мяса', breathHeading: 'Практики дыхания', durationLabel: 'Длительность', practiceDurationLabel: 'Практика', minutesLabel: 'мин', secondsLabel: 'сек', inhaleLabel: 'Вдох', exhaleLabel: 'Выдох', launchButton: 'Запуск', pauseButton: 'Пауза', resetButton: 'Сброс', wakeLockLabel: 'Не выключать экран', invalidTimeAlert: 'Введите корректное время.', meatHint: 'Каждую минуту прозвучит напоминание перевернуть мясо.', breathHint: 'Звуки подскажут вдох, выдох и каждую минуту практики.', readyPhase: 'Готово', inhalePhase: 'Вдох', exhalePhase: 'Выдох', pausedPhase: 'Пауза', timerStarted: 'Таймер готовки запущен.', minutePassed: 'Прошла минута. Пора перевернуть мясо.', meatMinuteActionText: 'Пора перевернуть мясо.', breathMinuteActionText: 'Продолжайте спокойно дышать.', cookingComplete: 'Готовка завершена! Можно снимать мясо с огня.', breathStarted: 'Практика дыхания началась.', breathMinute: 'Прошла минута. Продолжайте спокойно дышать.', breathComplete: 'Практика дыхания завершена.', minuteTitle: 'Минута таймера', finishTitle: 'Таймер завершён', breathMinuteTitle: 'Минута дыхания', breathFinishTitle: 'Дыхание завершено', updateAvailable: 'Доступна новая версия приложения.', updateButton: 'Обновить приложение'
+        pageTitle: 'Таймер мяса и дыхания', mainHeading: '🔥 Таймер мяса и дыхания 🌬️', meatTab: 'Готовка мяса', breathTab: 'Практики дыхания', meatHeading: 'Готовка мяса', breathHeading: 'Практики дыхания', durationLabel: 'Длительность', practiceDurationLabel: 'Практика', minutesLabel: 'мин', secondsLabel: 'сек', inhaleLabel: 'Вдох', exhaleLabel: 'Выдох', presetSummary: 'Быстрый выбор', launchButton: 'Запуск', pauseButton: 'Пауза', resetButton: 'Сброс', wakeLockLabel: 'Не выключать экран', invalidTimeAlert: 'Введите корректное время.', meatHint: 'Каждую минуту прозвучит напоминание перевернуть мясо.', breathHint: 'Звуки подскажут вдох, выдох и каждую минуту практики.', readyPhase: 'Готово', inhalePhase: 'Вдох', exhalePhase: 'Выдох', pausedPhase: 'Пауза', timerStarted: 'Таймер готовки запущен.', minutePassed: 'Прошла минута. Пора перевернуть мясо.', meatMinuteActionText: 'Пора перевернуть мясо.', breathMinuteActionText: 'Продолжайте спокойно дышать.', cookingComplete: 'Готовка завершена! Можно снимать мясо с огня.', breathStarted: 'Практика дыхания началась.', breathMinute: 'Прошла минута. Продолжайте спокойно дышать.', breathComplete: 'Практика дыхания завершена.', minuteTitle: 'Минута таймера', finishTitle: 'Таймер завершён', breathMinuteTitle: 'Минута дыхания', breathFinishTitle: 'Дыхание завершено', updateAvailable: 'Доступна новая версия приложения.', updateButton: 'Обновить приложение'
       }
     };
 
@@ -178,8 +231,11 @@
     let pendingServiceWorker = null;
     let isRefreshingAfterUpdate = false;
 
-    meatMinutesInput.addEventListener('input', () => { meatRangeInput.value = meatMinutesInput.value; });
-    meatRangeInput.addEventListener('input', () => { meatMinutesInput.value = meatRangeInput.value; });
+    meatMinutesInput.addEventListener('input', () => { syncMeatMinutes(meatMinutesInput.value); saveTimerSettings(); });
+    meatRangeInput.addEventListener('input', () => { syncMeatMinutes(meatRangeInput.value); saveTimerSettings(); });
+    breathMinutesInput.addEventListener('input', saveTimerSettings);
+    inhaleInput.addEventListener('input', saveTimerSettings);
+    exhaleInput.addEventListener('input', saveTimerSettings);
     wakeLockCheckbox.addEventListener('change', () => {
       if (meatInterval && wakeLockCheckbox.checked) requestWakeLock();
       if (!wakeLockCheckbox.checked) releaseWakeLock();
@@ -203,9 +259,37 @@
     }
 
     function initLanguage() {
+      loadSavedTimerSettings();
       const saved = localStorage.getItem('preferredLanguage');
       const browserLang = navigator.language.startsWith('ru') ? 'ru' : 'en';
       switchLanguage(saved || browserLang);
+    }
+
+    function readSavedPositiveNumber(key, fallback, min, max) {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return fallback;
+      const saved = Number(raw);
+      if (!Number.isFinite(saved)) return fallback;
+      return Math.min(max, Math.max(min, saved));
+    }
+
+    function loadSavedTimerSettings() {
+      syncMeatMinutes(readSavedPositiveNumber('meatMinutes', Number(meatMinutesInput.value), 1, 120));
+      breathMinutesInput.value = readSavedPositiveNumber('breathMinutes', Number(breathMinutesInput.value), 1, 120);
+      inhaleInput.value = readSavedPositiveNumber('inhaleSeconds', Number(inhaleInput.value), 1, 30);
+      exhaleInput.value = readSavedPositiveNumber('exhaleSeconds', Number(exhaleInput.value), 1, 30);
+    }
+
+    function saveTimerSettings() {
+      localStorage.setItem('meatMinutes', meatMinutesInput.value);
+      localStorage.setItem('breathMinutes', breathMinutesInput.value);
+      localStorage.setItem('inhaleSeconds', inhaleInput.value);
+      localStorage.setItem('exhaleSeconds', exhaleInput.value);
+    }
+
+    function syncMeatMinutes(value) {
+      meatMinutesInput.value = value;
+      meatRangeInput.value = value;
     }
 
     function switchMode(mode) {
@@ -216,8 +300,15 @@
     }
 
     function setMeatPreset(mins) {
-      meatMinutesInput.value = mins;
-      meatRangeInput.value = mins;
+      syncMeatMinutes(mins);
+      saveTimerSettings();
+    }
+
+    function setBreathPreset(field, value) {
+      if (field === 'minutes') breathMinutesInput.value = value;
+      else if (field === 'inhale') inhaleInput.value = value;
+      else if (field === 'exhale') exhaleInput.value = value;
+      saveTimerSettings();
     }
 
     async function requestWakeLock() {

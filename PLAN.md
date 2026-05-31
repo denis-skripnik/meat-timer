@@ -39,6 +39,23 @@ Keep the current no-framework HTML/CSS/JS approach and update only the files nee
 8. Update `README.md`.
 9. Run smoke validation: parse/check JS, verify HTML/service worker syntax, verify MP3 files, inspect git diff/status.
 
+## Follow-up: accessible preset controls and persistence
+
+### Scope
+
+- Keep the no-framework single-file app.
+- Make TalkBack-friendly preset buttons available beside timer fields without making the page bulky.
+- Persist configured values across reloads/return visits.
+
+### Acceptance criteria
+
+- Meat preset buttons are inside an accessible collapsible section (`details`/`summary`) near the meat duration field.
+- Breathing practice has accessible collapsible preset sections for practice minutes, inhale seconds, and exhale seconds.
+- Inhale and exhale preset buttons provide 1–10 seconds.
+- Input changes and preset button presses are saved to `localStorage` and restored on load.
+- Range and number inputs stay synchronized.
+- Static smoke checks cover the new controls and saved-settings behavior.
+
 ## Risks and assumptions
 
 - Audio generation depends on local or reachable tooling. If online TTS is unavailable, the app code path will still support assets, but generation would be blocked. For this pass, use local ffmpeg-generated MP3 prompts if speech TTS tooling is not available.
