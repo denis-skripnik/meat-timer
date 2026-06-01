@@ -55,6 +55,7 @@ Keep the current no-framework HTML/CSS/JS approach and update only the files nee
 - Input changes and preset button presses are saved to `localStorage` and restored on load.
 - Range and number inputs stay synchronized.
 - Static smoke checks cover the new controls and saved-settings behavior.
+- After a preset button is chosen, the currently opened quick-choice section collapses automatically.
 
 ## Risks and assumptions
 

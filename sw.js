@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meat-breath-timer-v6';
+const CACHE_NAME = 'meat-breath-timer-v10';
 const OFFLINE_URL = './index.html';
 
 function buildMinuteAudioAssets() {

@@ -49,8 +49,8 @@ assert(html.includes('id="inhalePresetControls"'), 'Inhale preset controls secti
 assert(html.includes('id="exhalePresetControls"'), 'Exhale preset controls section is missing.');
 
 for (let second = 1; second <= 10; second += 1) {
-  assert(html.includes(`setBreathPreset('inhale', ${second})`), `Inhale ${second}s preset button is missing.`);
-  assert(html.includes(`setBreathPreset('exhale', ${second})`), `Exhale ${second}s preset button is missing.`);
+  assert(html.includes(`setBreathPreset('inhale', ${second}, this)`), `Inhale ${second}s preset button is missing.`);
+  assert(html.includes(`setBreathPreset('exhale', ${second}, this)`), `Exhale ${second}s preset button is missing.`);
 }
 
 assert(countMatches(script, /localStorage\.setItem\('meatMinutes'/g) >= 1, 'Meat minutes should be saved to localStorage.');
@@ -64,6 +64,23 @@ assert(script.includes('saveTimerSettings()'), 'Timer settings save helper shoul
 const initBody = getFunctionBody(script, 'initLanguage');
 assert(initBody.includes('loadSavedTimerSettings()'), 'Saved timer settings should load before language initialization finishes.');
 
-assert(sw.includes("meat-breath-timer-v6"), 'Service worker cache version should be bumped after HTML changes.');
+assert(script.includes('collapsePresetDetails(trigger)'), 'Preset selection should collapse the current details section.');
+assert(script.includes("trigger.closest('details')"), 'Preset collapse should target the clicked button details section.');
+assert(html.includes('setMeatPreset(5, this)'), 'Meat preset buttons should pass the clicked button to the handler.');
+assert(html.includes("setBreathPreset('inhale', 10, this)"), 'Breathing preset buttons should pass the clicked button to the handler.');
+
+assert(script.includes("startBreathPhase('inhale', 650)"), 'Initial inhale phase should start immediately; only the voice prompt may be delayed.');
+assert(!script.includes("setTimeout(() => startBreathPhase('inhale'), 650)"), 'Initial phase timing should not be delayed by the start prompt.');
+assert(script.includes('promptDelayMs = 0'), 'Breathing phase helper should support delayed prompt without delaying phase timing.');
+assert(script.includes('getRemainingSeconds(deadlineMs'), 'Timers should use wall-clock deadlines instead of trusting setInterval cadence.');
+assert(script.includes('meatDeadlineMs = Date.now() + meatRemainingSeconds * 1000'), 'Meat timer should resume from a wall-clock deadline.');
+assert(script.includes('breathDeadlineMs = breathStartedAtMs + breathConfiguredSeconds * 1000'), 'Breath timer should track a wall-clock deadline.');
+assert(script.includes('getBreathPhaseState(elapsedMs, inhaleSeconds, exhaleSeconds)'), 'Breath phases should be recomputed from elapsed wall-clock time.');
+assert(script.includes('const TIMER_POLL_MS = 250'), 'Timer state should be polled more often than once per second to avoid late phase transitions.');
+assert(script.includes('setInterval(tickBreathTimer, TIMER_POLL_MS)'), 'Breath timer should use the shared high-resolution polling interval.');
+assert(script.includes("if (breathTimerDisplay.textContent !== nextText) breathTimerDisplay.textContent = nextText"), 'Breath aria-live timer should update only when the visible second changes.');
+assert(script.includes('activeAudioPrompts.add(audio)'), 'Audio prompts should keep a strong reference while playing on mobile browsers.');
+
+assert(sw.includes("meat-breath-timer-v10"), 'Service worker cache version should be bumped after HTML changes.');
 
 console.log('Smoke checks passed.');

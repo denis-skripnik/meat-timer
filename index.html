@@ -99,13 +99,13 @@
       <details id="meatPresetControls" class="preset-details">
         <summary data-i18n="presetSummary">Быстрый выбор</summary>
         <div class="preset-buttons" aria-label="Meat presets">
-          <button type="button" onclick="setMeatPreset(5)">5</button>
-          <button type="button" onclick="setMeatPreset(10)">10</button>
-          <button type="button" onclick="setMeatPreset(20)">20</button>
-          <button type="button" onclick="setMeatPreset(30)">30</button>
-          <button type="button" onclick="setMeatPreset(40)">40</button>
-          <button type="button" onclick="setMeatPreset(50)">50</button>
-          <button type="button" onclick="setMeatPreset(60)">60</button>
+          <button type="button" onclick="setMeatPreset(5, this)">5</button>
+          <button type="button" onclick="setMeatPreset(10, this)">10</button>
+          <button type="button" onclick="setMeatPreset(20, this)">20</button>
+          <button type="button" onclick="setMeatPreset(30, this)">30</button>
+          <button type="button" onclick="setMeatPreset(40, this)">40</button>
+          <button type="button" onclick="setMeatPreset(50, this)">50</button>
+          <button type="button" onclick="setMeatPreset(60, this)">60</button>
         </div>
       </details>
       <div>
@@ -126,14 +126,14 @@
         <details id="breathMinutesPresetControls" class="preset-details">
           <summary data-i18n="presetSummary">Быстрый выбор</summary>
           <div class="preset-buttons" aria-label="Breathing practice minute presets">
-            <button type="button" onclick="setBreathPreset('minutes', 1)">1</button>
-            <button type="button" onclick="setBreathPreset('minutes', 2)">2</button>
-            <button type="button" onclick="setBreathPreset('minutes', 3)">3</button>
-            <button type="button" onclick="setBreathPreset('minutes', 5)">5</button>
-            <button type="button" onclick="setBreathPreset('minutes', 10)">10</button>
-            <button type="button" onclick="setBreathPreset('minutes', 15)">15</button>
-            <button type="button" onclick="setBreathPreset('minutes', 20)">20</button>
-            <button type="button" onclick="setBreathPreset('minutes', 30)">30</button>
+            <button type="button" onclick="setBreathPreset('minutes', 1, this)">1</button>
+            <button type="button" onclick="setBreathPreset('minutes', 2, this)">2</button>
+            <button type="button" onclick="setBreathPreset('minutes', 3, this)">3</button>
+            <button type="button" onclick="setBreathPreset('minutes', 5, this)">5</button>
+            <button type="button" onclick="setBreathPreset('minutes', 10, this)">10</button>
+            <button type="button" onclick="setBreathPreset('minutes', 15, this)">15</button>
+            <button type="button" onclick="setBreathPreset('minutes', 20, this)">20</button>
+            <button type="button" onclick="setBreathPreset('minutes', 30, this)">30</button>
           </div>
         </details>
         <label><span data-i18n="inhaleLabel">Вдох</span>
@@ -142,16 +142,16 @@
         <details id="inhalePresetControls" class="preset-details">
           <summary data-i18n="presetSummary">Быстрый выбор</summary>
           <div class="preset-buttons" aria-label="Inhale second presets">
-            <button type="button" onclick="setBreathPreset('inhale', 1)">1</button>
-            <button type="button" onclick="setBreathPreset('inhale', 2)">2</button>
-            <button type="button" onclick="setBreathPreset('inhale', 3)">3</button>
-            <button type="button" onclick="setBreathPreset('inhale', 4)">4</button>
-            <button type="button" onclick="setBreathPreset('inhale', 5)">5</button>
-            <button type="button" onclick="setBreathPreset('inhale', 6)">6</button>
-            <button type="button" onclick="setBreathPreset('inhale', 7)">7</button>
-            <button type="button" onclick="setBreathPreset('inhale', 8)">8</button>
-            <button type="button" onclick="setBreathPreset('inhale', 9)">9</button>
-            <button type="button" onclick="setBreathPreset('inhale', 10)">10</button>
+            <button type="button" onclick="setBreathPreset('inhale', 1, this)">1</button>
+            <button type="button" onclick="setBreathPreset('inhale', 2, this)">2</button>
+            <button type="button" onclick="setBreathPreset('inhale', 3, this)">3</button>
+            <button type="button" onclick="setBreathPreset('inhale', 4, this)">4</button>
+            <button type="button" onclick="setBreathPreset('inhale', 5, this)">5</button>
+            <button type="button" onclick="setBreathPreset('inhale', 6, this)">6</button>
+            <button type="button" onclick="setBreathPreset('inhale', 7, this)">7</button>
+            <button type="button" onclick="setBreathPreset('inhale', 8, this)">8</button>
+            <button type="button" onclick="setBreathPreset('inhale', 9, this)">9</button>
+            <button type="button" onclick="setBreathPreset('inhale', 10, this)">10</button>
           </div>
         </details>
         <label><span data-i18n="exhaleLabel">Выдох</span>
@@ -160,16 +160,16 @@
         <details id="exhalePresetControls" class="preset-details">
           <summary data-i18n="presetSummary">Быстрый выбор</summary>
           <div class="preset-buttons" aria-label="Exhale second presets">
-            <button type="button" onclick="setBreathPreset('exhale', 1)">1</button>
-            <button type="button" onclick="setBreathPreset('exhale', 2)">2</button>
-            <button type="button" onclick="setBreathPreset('exhale', 3)">3</button>
-            <button type="button" onclick="setBreathPreset('exhale', 4)">4</button>
-            <button type="button" onclick="setBreathPreset('exhale', 5)">5</button>
-            <button type="button" onclick="setBreathPreset('exhale', 6)">6</button>
-            <button type="button" onclick="setBreathPreset('exhale', 7)">7</button>
-            <button type="button" onclick="setBreathPreset('exhale', 8)">8</button>
-            <button type="button" onclick="setBreathPreset('exhale', 9)">9</button>
-            <button type="button" onclick="setBreathPreset('exhale', 10)">10</button>
+            <button type="button" onclick="setBreathPreset('exhale', 1, this)">1</button>
+            <button type="button" onclick="setBreathPreset('exhale', 2, this)">2</button>
+            <button type="button" onclick="setBreathPreset('exhale', 3, this)">3</button>
+            <button type="button" onclick="setBreathPreset('exhale', 4, this)">4</button>
+            <button type="button" onclick="setBreathPreset('exhale', 5, this)">5</button>
+            <button type="button" onclick="setBreathPreset('exhale', 6, this)">6</button>
+            <button type="button" onclick="setBreathPreset('exhale', 7, this)">7</button>
+            <button type="button" onclick="setBreathPreset('exhale', 8, this)">8</button>
+            <button type="button" onclick="setBreathPreset('exhale', 9, this)">9</button>
+            <button type="button" onclick="setBreathPreset('exhale', 10, this)">10</button>
           </div>
         </details>
       </div>
@@ -208,11 +208,19 @@
     let meatInterval = null;
     let meatRemainingSeconds = 0;
     let meatConfiguredSeconds = 0;
+    let meatDeadlineMs = 0;
+    let meatLastAnnouncedMinute = 0;
     let breathInterval = null;
     let breathRemainingSeconds = 0;
     let breathConfiguredSeconds = 0;
+    let breathStartedAtMs = 0;
+    let breathDeadlineMs = 0;
+    let breathElapsedBeforePauseMs = 0;
+    let breathLastAnnouncedMinute = 0;
     let breathPhase = 'ready';
     let breathPhaseRemaining = 0;
+    const activeAudioPrompts = new Set();
+    const TIMER_POLL_MS = 250;
 
     const wakeLockCheckbox = document.getElementById('wakeLockCheckbox');
     const meatMinutesInput = document.getElementById('meatMinutesInput');
@@ -242,6 +250,10 @@
     });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && meatInterval && wakeLockCheckbox.checked) requestWakeLock();
+      if (document.visibilityState === 'visible') {
+        if (meatInterval) tickMeatTimer();
+        if (breathInterval) tickBreathTimer();
+      }
     });
 
     function t(key) { return translations[currentLanguage][key]; }
@@ -299,16 +311,23 @@
       document.getElementById('breathTab').setAttribute('aria-selected', String(mode === 'breath'));
     }
 
-    function setMeatPreset(mins) {
-      syncMeatMinutes(mins);
-      saveTimerSettings();
+    function collapsePresetDetails(trigger) {
+      const details = trigger && trigger.closest ? trigger.closest('details') : null;
+      if (details) details.open = false;
     }
 
-    function setBreathPreset(field, value) {
+    function setMeatPreset(mins, trigger) {
+      syncMeatMinutes(mins);
+      saveTimerSettings();
+      collapsePresetDetails(trigger);
+    }
+
+    function setBreathPreset(field, value, trigger) {
       if (field === 'minutes') breathMinutesInput.value = value;
       else if (field === 'inhale') inhaleInput.value = value;
       else if (field === 'exhale') exhaleInput.value = value;
       saveTimerSettings();
+      collapsePresetDetails(trigger);
     }
 
     async function requestWakeLock() {
@@ -332,6 +351,10 @@
     function playAudioFile(fileName) {
       const audio = new Audio(getAudioFilePath(fileName));
       audio.volume = 1.0;
+      activeAudioPrompts.add(audio);
+      const forgetAudio = () => activeAudioPrompts.delete(audio);
+      audio.addEventListener('ended', forgetAudio, { once: true });
+      audio.addEventListener('error', forgetAudio, { once: true });
       audio.play().catch(error => console.warn('Audio prompt could not play:', error));
       return audio;
     }
@@ -441,6 +464,27 @@
       return Number.isFinite(value) && value > 0 ? value : null;
     }
 
+    function getRemainingSeconds(deadlineMs, nowMs = Date.now()) {
+      return Math.max(0, Math.ceil((deadlineMs - nowMs) / 1000));
+    }
+
+    function getElapsedSeconds(configuredSeconds, remainingSeconds) {
+      return Math.max(0, configuredSeconds - remainingSeconds);
+    }
+
+    function getBreathPhaseState(elapsedMs, inhaleSeconds, exhaleSeconds) {
+      const inhaleMs = Math.round(inhaleSeconds * 1000);
+      const exhaleMs = Math.round(exhaleSeconds * 1000);
+      const cycleMs = inhaleMs + exhaleMs;
+      const positionMs = cycleMs > 0 ? elapsedMs % cycleMs : 0;
+      const isInhale = positionMs < inhaleMs;
+      const phaseEndMs = isInhale ? inhaleMs : cycleMs;
+      return {
+        phase: isInhale ? 'inhale' : 'exhale',
+        remainingSeconds: Math.max(1, Math.ceil((phaseEndMs - positionMs) / 1000))
+      };
+    }
+
     function toggleMeatTimer() { meatInterval ? pauseMeatTimer() : startMeatTimer(); }
 
     function startMeatTimer() {
@@ -450,13 +494,15 @@
       if (meatRemainingSeconds <= 0) {
         meatConfiguredSeconds = Math.round(minutes * 60);
         meatRemainingSeconds = meatConfiguredSeconds;
+        meatLastAnnouncedMinute = 0;
         playRecordedPrompt('meatStart');
       }
+      meatDeadlineMs = Date.now() + meatRemainingSeconds * 1000;
       updateMeatDisplay();
       flame.style.display = 'block';
       if (wakeLockCheckbox.checked) requestWakeLock();
       playTone();
-      meatInterval = setInterval(tickMeatTimer, 1000);
+      meatInterval = setInterval(tickMeatTimer, TIMER_POLL_MS);
       updateToggleButtons();
     }
 
@@ -469,14 +515,16 @@
     }
 
     function tickMeatTimer() {
-      meatRemainingSeconds -= 1;
+      meatRemainingSeconds = getRemainingSeconds(meatDeadlineMs);
       updateMeatDisplay();
-      const elapsedSeconds = meatConfiguredSeconds - meatRemainingSeconds;
-      if (elapsedSeconds > 0 && elapsedSeconds % 60 === 0 && meatRemainingSeconds > 0) {
+      const elapsedSeconds = getElapsedSeconds(meatConfiguredSeconds, meatRemainingSeconds);
+      const elapsedMinute = Math.floor(elapsedSeconds / 60);
+      if (elapsedMinute > meatLastAnnouncedMinute && meatRemainingSeconds > 0) {
+        meatLastAnnouncedMinute = elapsedMinute;
         playTone(600, 150);
         setTimeout(() => playTone(900, 150), 180);
-        setTimeout(() => playMinutePrompt('meat', Math.floor(elapsedSeconds / 60)), 650);
-        notify(t('minuteTitle'), formatMinuteMessage('meat', Math.floor(elapsedSeconds / 60)));
+        setTimeout(() => playMinutePrompt('meat', elapsedMinute), 650);
+        notify(t('minuteTitle'), formatMinuteMessage('meat', elapsedMinute));
       }
       if (meatRemainingSeconds <= 0) finishMeatTimer();
     }
@@ -485,6 +533,7 @@
       clearInterval(meatInterval);
       meatInterval = null;
       meatRemainingSeconds = 0;
+      meatDeadlineMs = 0;
       releaseWakeLock();
       flame.style.display = 'none';
       playTone(700, 200);
@@ -501,13 +550,18 @@
       meatInterval = null;
       meatRemainingSeconds = 0;
       meatConfiguredSeconds = 0;
+      meatDeadlineMs = 0;
+      meatLastAnnouncedMinute = 0;
       releaseWakeLock();
       flame.style.display = 'none';
       updateMeatDisplay(0);
       updateToggleButtons();
     }
 
-    function updateMeatDisplay(value = meatRemainingSeconds) { meatTimerDisplay.textContent = formatTime(value); }
+    function updateMeatDisplay(value = meatRemainingSeconds) {
+      const nextText = formatTime(value);
+      if (meatTimerDisplay.textContent !== nextText) meatTimerDisplay.textContent = nextText;
+    }
 
     function toggleBreathTimer() { breathInterval ? pauseBreathTimer() : startBreathTimer(); }
 
@@ -520,16 +574,23 @@
       if (breathRemainingSeconds <= 0) {
         breathConfiguredSeconds = Math.round(minutes * 60);
         breathRemainingSeconds = breathConfiguredSeconds;
+        breathElapsedBeforePauseMs = 0;
+        breathLastAnnouncedMinute = 0;
+        breathStartedAtMs = Date.now();
+        breathDeadlineMs = breathStartedAtMs + breathConfiguredSeconds * 1000;
         playRecordedPrompt('breathStart');
-        setTimeout(() => startBreathPhase('inhale'), 650);
+        startBreathPhase('inhale', 650);
       } else {
+        breathStartedAtMs = Date.now() - breathElapsedBeforePauseMs;
+        breathDeadlineMs = breathStartedAtMs + breathConfiguredSeconds * 1000;
         applyBreathPhaseVisuals();
       }
-      breathInterval = setInterval(tickBreathTimer, 1000);
+      breathInterval = setInterval(tickBreathTimer, TIMER_POLL_MS);
       updateToggleButtons();
     }
 
     function pauseBreathTimer() {
+      if (breathConfiguredSeconds > 0) breathElapsedBeforePauseMs = Math.max(0, (breathConfiguredSeconds - breathRemainingSeconds) * 1000);
       clearInterval(breathInterval);
       breathInterval = null;
       breathOrb.classList.remove('inhale', 'exhale');
@@ -538,25 +599,38 @@
     }
 
     function tickBreathTimer() {
-      breathRemainingSeconds -= 1;
-      breathPhaseRemaining -= 1;
+      const nowMs = Date.now();
+      const elapsedMs = Math.max(0, nowMs - breathStartedAtMs);
+      const inhaleSeconds = parsePositiveNumber(inhaleInput);
+      const exhaleSeconds = parsePositiveNumber(exhaleInput);
+      if (!inhaleSeconds || !exhaleSeconds) return;
+
+      breathRemainingSeconds = getRemainingSeconds(breathDeadlineMs, nowMs);
+      breathElapsedBeforePauseMs = Math.min(breathConfiguredSeconds * 1000, elapsedMs);
       updateBreathDisplay();
-      const elapsedSeconds = breathConfiguredSeconds - breathRemainingSeconds;
-      if (elapsedSeconds > 0 && elapsedSeconds % 60 === 0 && breathRemainingSeconds > 0) {
+      const elapsedSeconds = getElapsedSeconds(breathConfiguredSeconds, breathRemainingSeconds);
+      const elapsedMinute = Math.floor(elapsedSeconds / 60);
+      if (elapsedMinute > breathLastAnnouncedMinute && breathRemainingSeconds > 0) {
+        breathLastAnnouncedMinute = elapsedMinute;
         playCalmMinuteSound();
-        setTimeout(() => playMinutePrompt('breath', Math.floor(elapsedSeconds / 60)), 650);
-        notify(t('breathMinuteTitle'), formatMinuteMessage('breath', Math.floor(elapsedSeconds / 60)));
+        setTimeout(() => playMinutePrompt('breath', elapsedMinute), 650);
+        notify(t('breathMinuteTitle'), formatMinuteMessage('breath', elapsedMinute));
       }
       if (breathRemainingSeconds <= 0) return finishBreathTimer();
-      if (breathPhaseRemaining <= 0) startBreathPhase(breathPhase === 'inhale' ? 'exhale' : 'inhale');
+
+      const nextState = getBreathPhaseState(elapsedMs, inhaleSeconds, exhaleSeconds);
+      if (nextState.phase !== breathPhase) startBreathPhase(nextState.phase);
+      else breathPhaseRemaining = nextState.remainingSeconds;
     }
 
-    function startBreathPhase(phase) {
+    function startBreathPhase(phase, promptDelayMs = 0) {
       breathPhase = phase;
       breathPhaseRemaining = Math.round(parsePositiveNumber(phase === 'inhale' ? inhaleInput : exhaleInput));
       updateBreathPhaseLabel();
       applyBreathPhaseVisuals();
-      playRecordedPrompt(phase === 'inhale' ? 'breathInhale' : 'breathExhale');
+      const promptKey = phase === 'inhale' ? 'breathInhale' : 'breathExhale';
+      if (promptDelayMs > 0) setTimeout(() => playRecordedPrompt(promptKey), promptDelayMs);
+      else playRecordedPrompt(promptKey);
     }
 
     function applyBreathPhaseVisuals() {
@@ -570,6 +644,10 @@
       breathInterval = null;
       breathRemainingSeconds = 0;
       breathConfiguredSeconds = 0;
+      breathStartedAtMs = 0;
+      breathDeadlineMs = 0;
+      breathElapsedBeforePauseMs = 0;
+      breathLastAnnouncedMinute = 0;
       breathPhase = 'ready';
       breathPhaseRemaining = 0;
       breathOrb.classList.remove('inhale', 'exhale');
@@ -586,6 +664,10 @@
       breathInterval = null;
       breathRemainingSeconds = 0;
       breathConfiguredSeconds = 0;
+      breathStartedAtMs = 0;
+      breathDeadlineMs = 0;
+      breathElapsedBeforePauseMs = 0;
+      breathLastAnnouncedMinute = 0;
       breathPhase = 'ready';
       breathPhaseRemaining = 0;
       breathOrb.classList.remove('inhale', 'exhale');
@@ -594,7 +676,10 @@
       updateToggleButtons();
     }
 
-    function updateBreathDisplay(value = breathRemainingSeconds) { breathTimerDisplay.textContent = formatTime(value); }
+    function updateBreathDisplay(value = breathRemainingSeconds) {
+      const nextText = formatTime(value);
+      if (breathTimerDisplay.textContent !== nextText) breathTimerDisplay.textContent = nextText;
+    }
 
     function updateBreathPhaseLabel() {
       if (breathPhase === 'inhale') breathPhaseDisplay.textContent = t('inhalePhase');
