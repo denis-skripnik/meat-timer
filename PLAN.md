@@ -63,6 +63,22 @@ Keep the current no-framework HTML/CSS/JS approach and update only the files nee
 - Browser autoplay policies require a user click before audio playback; the toggle button provides that user gesture.
 - Background tab timer precision can still be limited by browsers; wake lock helps only while supported and enabled.
 
+## Follow-up: VTB self-employed support link
+
+### Scope
+
+- Add a small accessible support block to the static site.
+- Use Denis's VTB self-employed `Авточек по QR-коду` payment link.
+- Keep the payment flow as an external hosted link; do not add backend code or payment secrets.
+
+### Acceptance criteria
+
+- The page contains a clear RU/EN support block below the timer panels.
+- The CTA is a normal accessible link, not QR-only, so TalkBack users can activate it directly.
+- Copy says voluntary project support from 1 ₽ via VTB Online and notes that Denis is self-employed with an automatic receipt.
+- The external link opens in a new tab with safe `rel` attributes.
+- Static smoke checks verify the link and service worker cache version bump.
+
 ## Definition of done
 
 - The app works offline after first load with updated service worker cache.

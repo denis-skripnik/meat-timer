@@ -81,6 +81,12 @@ assert(script.includes('setInterval(tickBreathTimer, TIMER_POLL_MS)'), 'Breath t
 assert(script.includes("if (breathTimerDisplay.textContent !== nextText) breathTimerDisplay.textContent = nextText"), 'Breath aria-live timer should update only when the visible second changes.');
 assert(script.includes('activeAudioPrompts.add(audio)'), 'Audio prompts should keep a strong reference while playing on mobile browsers.');
 
-assert(sw.includes("meat-breath-timer-v10"), 'Service worker cache version should be bumped after HTML changes.');
+const supportUrl = 'https://vtb.paymo.ru/collect-money/qr/?transaction=333eacf7-a897-4e88-8e4e-9be82c929323';
+assert(html.includes(supportUrl), 'VTB support payment link is missing.');
+assert(html.includes('data-i18n="supportHeading"'), 'Support block heading should be translatable.');
+assert(html.includes('class="support-link"'), 'Support CTA should be a normal accessible link.');
+assert(html.includes('target="_blank" rel="noopener noreferrer"'), 'External support link should open safely.');
+
+assert(sw.includes("meat-breath-timer-v11"), 'Service worker cache version should be bumped after HTML changes.');
 
 console.log('Smoke checks passed.');

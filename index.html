@@ -28,7 +28,7 @@
       transition: background 0.2s, transform 0.2s;
     }
     button:hover { background: #555; }
-    button:focus-visible, input:focus-visible { outline: 3px solid #ffd27a; outline-offset: 3px; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #ffd27a; outline-offset: 3px; }
     button[aria-selected="true"], button.primary { background: #b84d00; }
     button.primary { font-size: 1.2em; min-width: 160px; }
     button.secondary { background: #202020; border: 1px solid #666; }
@@ -73,6 +73,17 @@
       border-radius: 12px; padding: 12px; background: rgba(255, 210, 122, 0.12);
     }
     .update-banner.visible { display: block; }
+    .support-card {
+      margin: 22px auto 0; padding: 18px; border: 1px solid #3c5f85; border-radius: 16px;
+      background: rgba(20, 56, 96, 0.32); text-align: left;
+    }
+    .support-card h2 { margin-top: 0; }
+    .support-card p { line-height: 1.5; }
+    .support-link {
+      display: inline-block; margin-top: 6px; padding: 12px 18px; border-radius: 10px;
+      background: #0050b5; color: #fff; font-weight: 700; text-decoration: none;
+    }
+    .support-link:hover { background: #1166d8; }
   </style>
 </head>
 <body>
@@ -182,6 +193,13 @@
       <div id="breathOrb" class="breath-orb" aria-hidden="true"></div>
       <p class="hint" data-i18n="breathHint">Звуки подскажут вдох, выдох и каждую минуту практики.</p>
     </section>
+
+    <section class="support-card" aria-labelledby="supportHeading">
+      <h2 id="supportHeading" data-i18n="supportHeading">Поддержать проект</h2>
+      <p data-i18n="supportText">Если Cook &amp; Breathe оказался полезным, можно поддержать разработку любой суммой от 1 ₽ через ВТБ Онлайн.</p>
+      <p class="hint" data-i18n="supportReceiptText">Я самозанятый. После оплаты чек формируется автоматически.</p>
+      <a class="support-link" href="https://vtb.paymo.ru/collect-money/qr/?transaction=333eacf7-a897-4e88-8e4e-9be82c929323" target="_blank" rel="noopener noreferrer" data-i18n="supportButton">Поддержать от 1 ₽</a>
+    </section>
   </main>
   <div id="updateBanner" class="update-banner" role="status" aria-live="polite">
     <span data-i18n="updateAvailable">Доступна новая версия приложения.</span>
@@ -192,10 +210,10 @@
   <script>
     const translations = {
       en: {
-        pageTitle: 'Meat and Breathing Timer', mainHeading: '🔥 Meat and Breathing Timer 🌬️', meatTab: 'Meat cooking', breathTab: 'Breathing practices', meatHeading: 'Meat cooking', breathHeading: 'Breathing practices', durationLabel: 'Duration', practiceDurationLabel: 'Practice', minutesLabel: 'min', secondsLabel: 'sec', inhaleLabel: 'Inhale', exhaleLabel: 'Exhale', presetSummary: 'Quick choices', launchButton: 'Launch', pauseButton: 'Pause', resetButton: 'Reset', wakeLockLabel: 'Keep screen on', invalidTimeAlert: 'Enter valid time.', meatHint: 'Every minute you will hear a reminder to flip the meat.', breathHint: 'Sounds guide inhale, exhale, and each minute of practice.', readyPhase: 'Ready', inhalePhase: 'Inhale', exhalePhase: 'Exhale', pausedPhase: 'Paused', timerStarted: 'Cooking timer started.', minutePassed: 'One minute passed. Time to flip the meat.', meatMinuteActionText: 'Time to flip the meat.', breathMinuteActionText: 'Keep breathing calmly.', cookingComplete: 'Cooking complete! You can remove the meat from heat.', breathStarted: 'Breathing practice started.', breathMinute: 'One minute passed. Keep breathing calmly.', breathComplete: 'Breathing practice complete.', minuteTitle: 'Timer Minute', finishTitle: 'Timer Complete', breathMinuteTitle: 'Breathing Minute', breathFinishTitle: 'Breathing Complete', updateAvailable: 'A new app version is available.', updateButton: 'Update app'
+        pageTitle: 'Meat and Breathing Timer', mainHeading: '🔥 Meat and Breathing Timer 🌬️', meatTab: 'Meat cooking', breathTab: 'Breathing practices', meatHeading: 'Meat cooking', breathHeading: 'Breathing practices', durationLabel: 'Duration', practiceDurationLabel: 'Practice', minutesLabel: 'min', secondsLabel: 'sec', inhaleLabel: 'Inhale', exhaleLabel: 'Exhale', presetSummary: 'Quick choices', launchButton: 'Launch', pauseButton: 'Pause', resetButton: 'Reset', wakeLockLabel: 'Keep screen on', invalidTimeAlert: 'Enter valid time.', meatHint: 'Every minute you will hear a reminder to flip the meat.', breathHint: 'Sounds guide inhale, exhale, and each minute of practice.', supportHeading: 'Support the project', supportText: 'If Cook & Breathe is useful, you can support development with any amount from 1 ₽ via VTB Online.', supportReceiptText: 'I am self-employed. A receipt is generated automatically after payment.', supportButton: 'Support from 1 ₽', readyPhase: 'Ready', inhalePhase: 'Inhale', exhalePhase: 'Exhale', pausedPhase: 'Paused', timerStarted: 'Cooking timer started.', minutePassed: 'One minute passed. Time to flip the meat.', meatMinuteActionText: 'Time to flip the meat.', breathMinuteActionText: 'Keep breathing calmly.', cookingComplete: 'Cooking complete! You can remove the meat from heat.', breathStarted: 'Breathing practice started.', breathMinute: 'One minute passed. Keep breathing calmly.', breathComplete: 'Breathing practice complete.', minuteTitle: 'Timer Minute', finishTitle: 'Timer Complete', breathMinuteTitle: 'Breathing Minute', breathFinishTitle: 'Breathing Complete', updateAvailable: 'A new app version is available.', updateButton: 'Update app'
       },
       ru: {
-        pageTitle: 'Таймер мяса и дыхания', mainHeading: '🔥 Таймер мяса и дыхания 🌬️', meatTab: 'Готовка мяса', breathTab: 'Практики дыхания', meatHeading: 'Готовка мяса', breathHeading: 'Практики дыхания', durationLabel: 'Длительность', practiceDurationLabel: 'Практика', minutesLabel: 'мин', secondsLabel: 'сек', inhaleLabel: 'Вдох', exhaleLabel: 'Выдох', presetSummary: 'Быстрый выбор', launchButton: 'Запуск', pauseButton: 'Пауза', resetButton: 'Сброс', wakeLockLabel: 'Не выключать экран', invalidTimeAlert: 'Введите корректное время.', meatHint: 'Каждую минуту прозвучит напоминание перевернуть мясо.', breathHint: 'Звуки подскажут вдох, выдох и каждую минуту практики.', readyPhase: 'Готово', inhalePhase: 'Вдох', exhalePhase: 'Выдох', pausedPhase: 'Пауза', timerStarted: 'Таймер готовки запущен.', minutePassed: 'Прошла минута. Пора перевернуть мясо.', meatMinuteActionText: 'Пора перевернуть мясо.', breathMinuteActionText: 'Продолжайте спокойно дышать.', cookingComplete: 'Готовка завершена! Можно снимать мясо с огня.', breathStarted: 'Практика дыхания началась.', breathMinute: 'Прошла минута. Продолжайте спокойно дышать.', breathComplete: 'Практика дыхания завершена.', minuteTitle: 'Минута таймера', finishTitle: 'Таймер завершён', breathMinuteTitle: 'Минута дыхания', breathFinishTitle: 'Дыхание завершено', updateAvailable: 'Доступна новая версия приложения.', updateButton: 'Обновить приложение'
+        pageTitle: 'Таймер мяса и дыхания', mainHeading: '🔥 Таймер мяса и дыхания 🌬️', meatTab: 'Готовка мяса', breathTab: 'Практики дыхания', meatHeading: 'Готовка мяса', breathHeading: 'Практики дыхания', durationLabel: 'Длительность', practiceDurationLabel: 'Практика', minutesLabel: 'мин', secondsLabel: 'сек', inhaleLabel: 'Вдох', exhaleLabel: 'Выдох', presetSummary: 'Быстрый выбор', launchButton: 'Запуск', pauseButton: 'Пауза', resetButton: 'Сброс', wakeLockLabel: 'Не выключать экран', invalidTimeAlert: 'Введите корректное время.', meatHint: 'Каждую минуту прозвучит напоминание перевернуть мясо.', breathHint: 'Звуки подскажут вдох, выдох и каждую минуту практики.', supportHeading: 'Поддержать проект', supportText: 'Если Cook & Breathe оказался полезным, можно поддержать разработку любой суммой от 1 ₽ через ВТБ Онлайн.', supportReceiptText: 'Я самозанятый. После оплаты чек формируется автоматически.', supportButton: 'Поддержать от 1 ₽', readyPhase: 'Готово', inhalePhase: 'Вдох', exhalePhase: 'Выдох', pausedPhase: 'Пауза', timerStarted: 'Таймер готовки запущен.', minutePassed: 'Прошла минута. Пора перевернуть мясо.', meatMinuteActionText: 'Пора перевернуть мясо.', breathMinuteActionText: 'Продолжайте спокойно дышать.', cookingComplete: 'Готовка завершена! Можно снимать мясо с огня.', breathStarted: 'Практика дыхания началась.', breathMinute: 'Прошла минута. Продолжайте спокойно дышать.', breathComplete: 'Практика дыхания завершена.', minuteTitle: 'Минута таймера', finishTitle: 'Таймер завершён', breathMinuteTitle: 'Минута дыхания', breathFinishTitle: 'Дыхание завершено', updateAvailable: 'Доступна новая версия приложения.', updateButton: 'Обновить приложение'
       }
     };
 
