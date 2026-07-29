@@ -25,6 +25,8 @@ Mobile browsers can throttle JavaScript timers and audio when a PWA is hidden or
 - Android notification permission request on Android 13+.
 - Exact alarm helper button on Android 12+ when the system requires permission.
 - Native controls (`TextView`, `EditText`, `Button`) for TalkBack-friendly navigation.
+- Two native mode tabs: `Готовка мяса` and `Практики дыхания`.
+- Quick actions are collapsed behind accessible `Показать/Скрыть` buttons, matching the compact PWA flow.
 - Bundled MP3 voice prompts from the PWA assets.
 - A TalkBack-accessible checkbox: `Озвучивать подсказки поверх музыки`.
 - Prompt playback uses transient ducking audio focus (`AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`) and speech/sonification audio attributes. This is designed so music apps usually keep playing and only become quieter while the short timer phrase plays.

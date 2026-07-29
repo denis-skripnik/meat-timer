@@ -34,6 +34,10 @@ public class MainActivity extends android.app.Activity {
     private EditText meatMinutesInput;
     private TextView meatDisplay;
     private Button meatToggle;
+    private Button meatTabButton;
+    private Button breathTabButton;
+    private LinearLayout meatPanel;
+    private LinearLayout breathPanel;
     private CheckBox voicePromptsCheckbox;
     private String lastSpokenBreathPhase = "";
 
@@ -81,7 +85,7 @@ public class MainActivity extends android.app.Activity {
         TextView title = heading("Cook & Breathe");
         title.setText("Cook & Breathe — таймер мяса и дыхания");
         root.addView(title);
-        root.addView(paragraph("Нативная Android-версия использует системные уведомления и точные alarm-события, поэтому лучше работает в фоне, чем PWA в браузере."));
+        root.addView(paragraph("Нативная Android-версия использует системные уведомления, точные alarm-события и голосовые подсказки поверх музыки."));
 
         if (!scheduler.canScheduleExactAlarms()) {
             root.addView(paragraph("Для точных уведомлений разрешите точные будильники для приложения."));
@@ -99,44 +103,86 @@ public class MainActivity extends android.app.Activity {
         root.addView(voicePromptsCheckbox);
         root.addView(paragraph("Озвучка использует короткий audio focus с ducking: музыка обычно продолжает играть и только слегка приглушается на время фразы."));
 
-        root.addView(sectionTitle("Готовка мяса"));
+        LinearLayout tabs = new LinearLayout(this);
+        tabs.setOrientation(LinearLayout.HORIZONTAL);
+        tabs.setGravity(Gravity.CENTER_HORIZONTAL);
+        tabs.setPadding(0, dp(12), 0, dp(12));
+        meatTabButton = button("Готовка мяса");
+        breathTabButton = button("Практики дыхания");
+        meatTabButton.setContentDescription("Вкладка: готовка мяса");
+        breathTabButton.setContentDescription("Вкладка: практики дыхания");
+        meatTabButton.setOnClickListener(v -> switchMode(KIND_MEAT));
+        breathTabButton.setOnClickListener(v -> switchMode(KIND_BREATH));
+        tabs.addView(meatTabButton);
+        tabs.addView(breathTabButton);
+        root.addView(tabs);
+
+        meatPanel = new LinearLayout(this);
+        meatPanel.setOrientation(LinearLayout.VERTICAL);
+        meatPanel.setContentDescription("Панель готовки мяса");
+        buildMeatPanel(meatPanel);
+        root.addView(meatPanel);
+
+        breathPanel = new LinearLayout(this);
+        breathPanel.setOrientation(LinearLayout.VERTICAL);
+        breathPanel.setContentDescription("Панель практик дыхания");
+        buildBreathPanel(breathPanel);
+        root.addView(breathPanel);
+
+        switchMode(prefs.getString("activeMode", KIND_MEAT));
+        return scroll;
+    }
+
+    private void buildMeatPanel(LinearLayout panel) {
+        panel.addView(sectionTitle("Готовка мяса"));
         meatMinutesInput = numberInput("Длительность готовки в минутах", prefInt("meatMinutes", 10), 1, 120);
-        root.addView(labeled("Длительность, минут", meatMinutesInput));
-        root.addView(presetRow(new int[]{5, 10, 20, 30, 40, 50, 60}, value -> meatMinutesInput.setText(String.valueOf(value))));
+        panel.addView(labeled("Длительность, минут", meatMinutesInput));
+        panel.addView(collapsiblePresetPanel("Быстрый выбор длительности готовки", new int[]{5, 10, 20, 30, 40, 50, 60}, value -> meatMinutesInput.setText(String.valueOf(value))));
         meatToggle = button("Запуск");
         meatToggle.setOnClickListener(v -> toggleMeat());
-        root.addView(meatToggle);
+        panel.addView(meatToggle);
         Button meatReset = button("Сброс готовки");
         meatReset.setOnClickListener(v -> resetMeat());
-        root.addView(meatReset);
+        panel.addView(meatReset);
         meatDisplay = timerText();
-        root.addView(meatDisplay);
-        root.addView(paragraph("Каждую минуту придёт системное уведомление: пора перевернуть мясо. В конце придёт отдельное уведомление."));
+        panel.addView(meatDisplay);
+        panel.addView(paragraph("Каждую минуту придёт системное уведомление и прозвучит подсказка: пора перевернуть мясо. В конце придёт отдельное уведомление."));
+    }
 
-        root.addView(sectionTitle("Практики дыхания"));
+    private void buildBreathPanel(LinearLayout panel) {
+        panel.addView(sectionTitle("Практики дыхания"));
         breathMinutesInput = numberInput("Длительность практики в минутах", prefInt("breathMinutes", 5), 1, 120);
         inhaleInput = numberInput("Вдох в секундах", prefInt("inhaleSeconds", 4), 1, 30);
         exhaleInput = numberInput("Выдох в секундах", prefInt("exhaleSeconds", 6), 1, 30);
-        root.addView(labeled("Практика, минут", breathMinutesInput));
-        root.addView(presetRow(new int[]{1, 2, 3, 5, 10, 15, 20, 30}, value -> breathMinutesInput.setText(String.valueOf(value))));
-        root.addView(labeled("Вдох, секунд", inhaleInput));
-        root.addView(presetRow(new int[]{1,2,3,4,5,6,7,8,9,10}, value -> inhaleInput.setText(String.valueOf(value))));
-        root.addView(labeled("Выдох, секунд", exhaleInput));
-        root.addView(presetRow(new int[]{1,2,3,4,5,6,7,8,9,10}, value -> exhaleInput.setText(String.valueOf(value))));
+        panel.addView(labeled("Практика, минут", breathMinutesInput));
+        panel.addView(collapsiblePresetPanel("Быстрый выбор длительности практики", new int[]{1, 2, 3, 5, 10, 15, 20, 30}, value -> breathMinutesInput.setText(String.valueOf(value))));
+        panel.addView(labeled("Вдох, секунд", inhaleInput));
+        panel.addView(collapsiblePresetPanel("Быстрый выбор вдоха", new int[]{1,2,3,4,5,6,7,8,9,10}, value -> inhaleInput.setText(String.valueOf(value))));
+        panel.addView(labeled("Выдох, секунд", exhaleInput));
+        panel.addView(collapsiblePresetPanel("Быстрый выбор выдоха", new int[]{1,2,3,4,5,6,7,8,9,10}, value -> exhaleInput.setText(String.valueOf(value))));
         breathToggle = button("Запуск");
         breathToggle.setOnClickListener(v -> toggleBreath());
-        root.addView(breathToggle);
+        panel.addView(breathToggle);
         Button breathReset = button("Сброс дыхания");
         breathReset.setOnClickListener(v -> resetBreath());
-        root.addView(breathReset);
+        panel.addView(breathReset);
         breathDisplay = timerText();
-        root.addView(breathDisplay);
+        panel.addView(breathDisplay);
         breathPhaseDisplay = paragraph("Готово");
         breathPhaseDisplay.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.addView(breathPhaseDisplay);
-        root.addView(paragraph("Фазы вдоха и выдоха показываются на экране. Минутные и финальные напоминания уходят через системные уведомления."));
+        panel.addView(breathPhaseDisplay);
+        panel.addView(paragraph("Фазы вдоха и выдоха показываются на экране. Минутные и финальные напоминания уходят через системные уведомления и голосовые подсказки."));
+    }
 
-        return scroll;
+    private void switchMode(String mode) {
+        boolean meatActive = !KIND_BREATH.equals(mode);
+        if (meatPanel != null) meatPanel.setVisibility(meatActive ? View.VISIBLE : View.GONE);
+        if (breathPanel != null) breathPanel.setVisibility(meatActive ? View.GONE : View.VISIBLE);
+        if (meatTabButton != null) meatTabButton.setEnabled(!meatActive);
+        if (breathTabButton != null) breathTabButton.setEnabled(meatActive);
+        if (meatTabButton != null) meatTabButton.setContentDescription(meatActive ? "Выбрана вкладка: готовка мяса" : "Вкладка: готовка мяса");
+        if (breathTabButton != null) breathTabButton.setContentDescription(meatActive ? "Вкладка: практики дыхания" : "Выбрана вкладка: практики дыхания");
+        prefs.edit().putString("activeMode", meatActive ? KIND_MEAT : KIND_BREATH).apply();
     }
 
     private void toggleMeat() {
@@ -320,17 +366,48 @@ public class MainActivity extends android.app.Activity {
 
     private interface PresetHandler { void apply(int value); }
 
-    private View presetRow(int[] values, PresetHandler handler) {
+    private View collapsiblePresetPanel(String title, int[] values, PresetHandler handler) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        Button summary = button(title);
+        summary.setContentDescription(title + ". Нажмите, чтобы раскрыть или скрыть быстрые действия.");
+        final LinearLayout[] contentRef = new LinearLayout[1];
+        LinearLayout content = presetRow(values, value -> {
+            handler.apply(value);
+            contentVisibility(contentRef[0], summary, false);
+        });
+        contentRef[0] = content;
+        contentVisibility(content, summary, false);
+        summary.setOnClickListener(v -> contentVisibility(content, summary, content.getVisibility() != View.VISIBLE));
+        box.addView(summary);
+        box.addView(content);
+        return box;
+    }
+
+    private void contentVisibility(View content, Button summary, boolean visible) {
+        content.setVisibility(visible ? View.VISIBLE : View.GONE);
+        summary.setText((visible ? "Скрыть: " : "Показать: ") + summary.getText().toString().replace("Показать: ", "").replace("Скрыть: ", ""));
+    }
+
+    private LinearLayout presetRow(int[] values, PresetHandler handler) {
         LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setOrientation(LinearLayout.VERTICAL);
         row.setGravity(Gravity.CENTER_HORIZONTAL);
         row.setPadding(0, dp(4), 0, dp(8));
-        for (int value : values) {
+        LinearLayout line = null;
+        for (int i = 0; i < values.length; i += 1) {
+            if (i % 4 == 0) {
+                line = new LinearLayout(this);
+                line.setOrientation(LinearLayout.HORIZONTAL);
+                line.setGravity(Gravity.CENTER_HORIZONTAL);
+                row.addView(line);
+            }
+            int value = values[i];
             Button b = button(String.valueOf(value));
             b.setTextSize(15);
             b.setContentDescription("Быстрый выбор: " + value);
             b.setOnClickListener(v -> handler.apply(value));
-            row.addView(b);
+            line.addView(b);
         }
         return row;
     }

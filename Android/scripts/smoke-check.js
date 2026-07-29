@@ -30,6 +30,12 @@ assert(main.includes('requestNotificationPermissionIfNeeded()'), 'Notification r
 assert(main.includes('openExactAlarmSettings()'), 'Exact alarm settings helper is missing.');
 assert(main.includes('Готовка мяса'), 'Meat timer section is missing.');
 assert(main.includes('Практики дыхания'), 'Breathing timer section is missing.');
+assert(main.includes('switchMode(KIND_MEAT)'), 'Native meat tab switching is missing.');
+assert(main.includes('switchMode(KIND_BREATH)'), 'Native breath tab switching is missing.');
+assert(main.includes('meatPanel.setVisibility'), 'Meat panel should be hidden/shown by tab state.');
+assert(main.includes('breathPanel.setVisibility'), 'Breath panel should be hidden/shown by tab state.');
+assert(main.includes('collapsiblePresetPanel'), 'Quick presets should be collapsed behind accessible panels.');
+assert(main.includes('Показать: ') && main.includes('Скрыть: '), 'Collapsible preset panels should expose show/hide labels.');
 assert(main.includes('SharedPreferences'), 'Local settings persistence is missing.');
 assert(main.includes('scheduler.scheduleTimer(KIND_MEAT'), 'Meat timer should schedule native alarms.');
 assert(main.includes('scheduler.scheduleTimer(KIND_BREATH'), 'Breath timer should schedule native alarms.');

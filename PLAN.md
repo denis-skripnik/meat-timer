@@ -41,6 +41,7 @@ The existing static PWA remains in place. The Android app is not a WebView wrapp
 - Android 13+ notification permission is requested from the app.
 - Android 12+ exact alarm access has a visible helper action when the system requires it.
 - UI uses normal native `TextView`, `Button`, `EditText`, and semantic labels so TalkBack can read the flow.
+- Android UI preserves the PWA structure: two accessible mode tabs and collapsible quick-choice panels instead of one long mixed screen.
 - Validation runs at least a static smoke check; if Android SDK/Gradle are available, run a debug build too.
 
 ### Implementation tasks
