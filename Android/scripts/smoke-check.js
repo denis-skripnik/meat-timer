@@ -8,6 +8,7 @@ const files = {
   scheduler: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerScheduler.java',
   receiver: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerAlarmReceiver.java',
   promptPlayer: 'app/src/main/java/xyz/blinddev/cookbreathe/PromptPlayer.java',
+  keeper: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerForegroundService.java',
   math: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerMath.java',
   flame: 'app/src/main/java/xyz/blinddev/cookbreathe/FlameView.java',
   orb: 'app/src/main/java/xyz/blinddev/cookbreathe/BreathOrbView.java',
@@ -23,6 +24,7 @@ const main = read(files.main);
 const scheduler = read(files.scheduler);
 const receiver = read(files.receiver);
 const promptPlayer = read(files.promptPlayer);
+const keeper = read(files.keeper);
 const math = read(files.math);
 const flame = read(files.flame);
 const orb = read(files.orb);
@@ -30,6 +32,10 @@ const styles = read(files.styles);
 
 assert(manifest.includes('android.permission.POST_NOTIFICATIONS'), 'Android 13 notification permission is missing.');
 assert(manifest.includes('android.permission.SCHEDULE_EXACT_ALARM'), 'Exact alarm permission is missing.');
+assert(manifest.includes('android.permission.WAKE_LOCK'), 'Wake lock permission is missing for locked-screen timer keeping.');
+assert(manifest.includes('android.permission.FOREGROUND_SERVICE'), 'Foreground service permission is missing.');
+assert(manifest.includes('TimerForegroundService'), 'TimerForegroundService is not registered.');
+assert(manifest.includes('foregroundServiceType="mediaPlayback"'), 'Foreground service type for prompt playback is missing.');
 assert(manifest.includes('TimerAlarmReceiver'), 'TimerAlarmReceiver is not registered.');
 
 assert(main.includes('requestNotificationPermissionIfNeeded()'), 'Notification runtime permission request is missing.');
@@ -49,6 +55,8 @@ assert(main.includes('setContentDescription'), 'Accessible content descriptions 
 assert(main.includes('Озвучивать подсказки поверх музыки'), 'Voice prompt checkbox copy is missing.');
 assert(main.includes('PromptPlayer.playStart'), 'Start prompts should play from the Activity.');
 assert(main.includes('PromptPlayer.playPhase'), 'Breathing phase prompts should play while the app is open.');
+assert(main.includes('startTimerKeeper') && main.includes('startForegroundService'), 'Active timers should start a foreground keeper service.');
+assert(main.includes('updateTimerKeeper'), 'Timer keeper should stop when timers pause/reset.');
 assert(main.includes('COLOR_BACKGROUND') && main.includes('setBackgroundColor(COLOR_BACKGROUND)'), 'Dark PWA-like background is missing.');
 assert(main.includes('new FlameView') && main.includes('new BreathOrbView'), 'Decorative flame/orb views should be mounted in the tabs.');
 assert(main.includes('updateBreathOrb'), 'Breathing orb should update with the current phase.');
@@ -71,6 +79,9 @@ assert(promptPlayer.includes('AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK'), 'Prompt play
 assert(promptPlayer.includes('USAGE_ASSISTANCE_SONIFICATION'), 'Prompt playback should use sonification audio attributes.');
 assert(promptPlayer.includes('CONTENT_TYPE_SPEECH'), 'Prompt playback should mark prompts as speech.');
 assert(promptPlayer.includes('minutePromptFiles'), 'Composable minute prompts should be supported.');
+assert(keeper.includes('PARTIAL_WAKE_LOCK'), 'Foreground keeper should hold a partial wake lock while a timer runs.');
+assert(keeper.includes('startForeground'), 'Foreground keeper should run as a foreground service.');
+assert(keeper.includes('START_STICKY'), 'Foreground keeper should be restartable while timers are active.');
 assert(promptPlayer.includes('number-') && promptPlayer.includes('minute-few.mp3'), 'RU/EN composable minute files should be referenced.');
 assert(exists('app/src/main/assets/audio/ru/meat-start.mp3'), 'RU start prompt asset is missing.');
 assert(exists('app/src/main/assets/audio/ru/number-120.mp3'), 'RU number prompt assets are missing.');

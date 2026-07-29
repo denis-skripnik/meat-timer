@@ -216,9 +216,10 @@ public class MainActivity extends android.app.Activity {
         saveSettings();
         if (meatState.remainingMillis <= 0L) meatState = TimerState.start(minutes);
         else meatState = meatState.resume();
+        persistRuntimeState();
+        startTimerKeeper();
         scheduler.scheduleTimer(KIND_MEAT, meatState.startedElapsedMs, (int) Math.ceil(meatState.durationMillis / 60_000.0));
         playStartPrompt(KIND_MEAT);
-        persistRuntimeState();
         updateAllDisplays();
     }
 
@@ -226,6 +227,7 @@ public class MainActivity extends android.app.Activity {
         meatState = meatState.pause();
         scheduler.cancelTimer(KIND_MEAT);
         persistRuntimeState();
+        updateTimerKeeper();
         updateAllDisplays();
     }
 
@@ -233,6 +235,7 @@ public class MainActivity extends android.app.Activity {
         meatState = TimerState.idle();
         scheduler.cancelTimer(KIND_MEAT);
         persistRuntimeState();
+        updateTimerKeeper();
         updateAllDisplays();
     }
 
@@ -245,10 +248,11 @@ public class MainActivity extends android.app.Activity {
         saveSettings();
         if (breathState.remainingMillis <= 0L) breathState = TimerState.start(minutes);
         else breathState = breathState.resume();
+        persistRuntimeState();
+        startTimerKeeper();
         scheduler.scheduleTimer(KIND_BREATH, breathState.startedElapsedMs, (int) Math.ceil(breathState.durationMillis / 60_000.0));
         playStartPrompt(KIND_BREATH);
         lastSpokenBreathPhase = "";
-        persistRuntimeState();
         updateAllDisplays();
     }
 
@@ -257,6 +261,7 @@ public class MainActivity extends android.app.Activity {
         scheduler.cancelTimer(KIND_BREATH);
         lastSpokenBreathPhase = "";
         persistRuntimeState();
+        updateTimerKeeper();
         updateAllDisplays();
     }
 
@@ -265,6 +270,7 @@ public class MainActivity extends android.app.Activity {
         scheduler.cancelTimer(KIND_BREATH);
         lastSpokenBreathPhase = "";
         persistRuntimeState();
+        updateTimerKeeper();
         updateAllDisplays();
     }
 
@@ -373,6 +379,20 @@ public class MainActivity extends android.app.Activity {
             Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()));
             startActivity(intent);
         }
+    }
+
+    private void startTimerKeeper() {
+        Intent intent = new Intent(this, TimerForegroundService.class).setAction(TimerForegroundService.ACTION_REFRESH);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent);
+        else startService(intent);
+    }
+
+    private void updateTimerKeeper() {
+        if (meatState.running || breathState.running) {
+            startTimerKeeper();
+            return;
+        }
+        stopService(new Intent(this, TimerForegroundService.class).setAction(TimerForegroundService.ACTION_STOP));
     }
 
     private TextView heading(String text) { TextView v = new TextView(this); v.setText(text); v.setTextSize(26); v.setTextColor(COLOR_TEXT); v.setGravity(Gravity.CENTER_HORIZONTAL); v.setPadding(0, 0, 0, dp(12)); return v; }

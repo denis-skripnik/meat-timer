@@ -23,6 +23,7 @@ Mobile browsers can throttle JavaScript timers and audio when a PWA is hidden or
   - minute reminder notifications and final notification.
 - Local settings via `SharedPreferences`.
 - Android notification permission request on Android 13+.
+- Foreground timer keeper service with a partial wake lock while a timer runs. This keeps minute prompts timely after the screen locks instead of waiting for Android to batch alarms in Doze.
 - Exact alarm helper button on Android 12+ when the system requires permission.
 - Native controls (`TextView`, `EditText`, `Button`) for TalkBack-friendly navigation.
 - Two native mode tabs: `Готовка мяса` and `Практики дыхания`.
@@ -72,4 +73,6 @@ Then open Cook & Breathe on Android, allow notifications, and if prompted allow 
 
 ## Android limitations
 
-Native exact alarms are significantly better than PWA background timers, but Android/OEM battery restrictions can still affect aggressively restricted apps. For best reliability, allow notifications and exact alarms, and avoid putting the app into a restricted battery mode.
+Native exact alarms are significantly better than PWA background timers. This Android build also starts a foreground keeper service with a partial wake lock while a timer is active, because Android may delay one-minute alarm delivery when the screen is locked and the device enters Doze.
+
+For best reliability, allow notifications and exact alarms, and avoid putting the app into a restricted battery mode.
