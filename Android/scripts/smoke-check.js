@@ -8,7 +8,10 @@ const files = {
   scheduler: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerScheduler.java',
   receiver: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerAlarmReceiver.java',
   promptPlayer: 'app/src/main/java/xyz/blinddev/cookbreathe/PromptPlayer.java',
-  math: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerMath.java'
+  math: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerMath.java',
+  flame: 'app/src/main/java/xyz/blinddev/cookbreathe/FlameView.java',
+  orb: 'app/src/main/java/xyz/blinddev/cookbreathe/BreathOrbView.java',
+  styles: 'app/src/main/res/values/styles.xml'
 };
 
 function read(rel) { return fs.readFileSync(path.join(root, rel), 'utf8'); }
@@ -21,6 +24,9 @@ const scheduler = read(files.scheduler);
 const receiver = read(files.receiver);
 const promptPlayer = read(files.promptPlayer);
 const math = read(files.math);
+const flame = read(files.flame);
+const orb = read(files.orb);
+const styles = read(files.styles);
 
 assert(manifest.includes('android.permission.POST_NOTIFICATIONS'), 'Android 13 notification permission is missing.');
 assert(manifest.includes('android.permission.SCHEDULE_EXACT_ALARM'), 'Exact alarm permission is missing.');
@@ -43,6 +49,9 @@ assert(main.includes('setContentDescription'), 'Accessible content descriptions 
 assert(main.includes('Озвучивать подсказки поверх музыки'), 'Voice prompt checkbox copy is missing.');
 assert(main.includes('PromptPlayer.playStart'), 'Start prompts should play from the Activity.');
 assert(main.includes('PromptPlayer.playPhase'), 'Breathing phase prompts should play while the app is open.');
+assert(main.includes('COLOR_BACKGROUND') && main.includes('setBackgroundColor(COLOR_BACKGROUND)'), 'Dark PWA-like background is missing.');
+assert(main.includes('new FlameView') && main.includes('new BreathOrbView'), 'Decorative flame/orb views should be mounted in the tabs.');
+assert(main.includes('updateBreathOrb'), 'Breathing orb should update with the current phase.');
 
 assert(scheduler.includes('setExactAndAllowWhileIdle'), 'Scheduler should use exact allow-while-idle alarms.');
 assert(scheduler.includes('ELAPSED_REALTIME_WAKEUP'), 'Scheduler should use elapsed realtime wakeup alarms.');
@@ -69,5 +78,10 @@ assert(exists('app/src/main/assets/audio/en/breath-finish.mp3'), 'EN prompt asse
 
 assert(math.includes('remainingMillis'), 'Wall-clock remaining helper is missing.');
 assert(math.includes('breathPhase'), 'Breath phase helper is missing.');
+assert(flame.includes('RadialGradient') && flame.includes('ValueAnimator'), 'Animated flame drawing is missing.');
+assert(flame.includes('IMPORTANT_FOR_ACCESSIBILITY_NO'), 'Decorative flame should be hidden from accessibility services.');
+assert(orb.includes('RadialGradient') && orb.includes('setPhase'), 'Breathing orb drawing/phase update is missing.');
+assert(orb.includes('IMPORTANT_FOR_ACCESSIBILITY_NO'), 'Decorative breathing orb should be hidden from accessibility services.');
+assert(styles.includes('Theme.Material.NoActionBar') && styles.includes('#050507'), 'Dark native theme is missing.');
 
 console.log('Android smoke checks passed.');

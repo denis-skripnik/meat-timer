@@ -2,6 +2,8 @@ package xyz.blinddev.cookbreathe;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -26,6 +28,11 @@ public class MainActivity extends android.app.Activity {
     private static final String PREFS = "cook_breathe_prefs";
     private static final String KIND_MEAT = "meat";
     private static final String KIND_BREATH = "breath";
+    private static final int COLOR_BACKGROUND = Color.rgb(5, 5, 7);
+    private static final int COLOR_PANEL = Color.rgb(24, 24, 28);
+    private static final int COLOR_TEXT = Color.rgb(245, 245, 245);
+    private static final int COLOR_HINT = Color.rgb(207, 207, 207);
+    private static final int COLOR_ACCENT = Color.rgb(184, 77, 0);
 
     private SharedPreferences prefs;
     private TimerScheduler scheduler;
@@ -38,6 +45,8 @@ public class MainActivity extends android.app.Activity {
     private Button breathTabButton;
     private LinearLayout meatPanel;
     private LinearLayout breathPanel;
+    private FlameView flameView;
+    private BreathOrbView breathOrbView;
     private CheckBox voicePromptsCheckbox;
     private String lastSpokenBreathPhase = "";
 
@@ -80,6 +89,8 @@ public class MainActivity extends android.app.Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(20), dp(20), dp(32));
+        root.setBackgroundColor(COLOR_BACKGROUND);
+        scroll.setBackgroundColor(COLOR_BACKGROUND);
         scroll.addView(root);
 
         TextView title = heading("Cook & Breathe");
@@ -97,6 +108,7 @@ public class MainActivity extends android.app.Activity {
         voicePromptsCheckbox = new CheckBox(this);
         voicePromptsCheckbox.setText("Озвучивать подсказки поверх музыки");
         voicePromptsCheckbox.setTextSize(18);
+        voicePromptsCheckbox.setTextColor(COLOR_TEXT);
         voicePromptsCheckbox.setChecked(prefs.getBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, true));
         voicePromptsCheckbox.setContentDescription("Озвучивать подсказки таймера поверх музыки");
         voicePromptsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> prefs.edit().putBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, isChecked).apply());
@@ -119,12 +131,16 @@ public class MainActivity extends android.app.Activity {
 
         meatPanel = new LinearLayout(this);
         meatPanel.setOrientation(LinearLayout.VERTICAL);
+        meatPanel.setPadding(dp(12), dp(12), dp(12), dp(12));
+        meatPanel.setBackground(panelBackground());
         meatPanel.setContentDescription("Панель готовки мяса");
         buildMeatPanel(meatPanel);
         root.addView(meatPanel);
 
         breathPanel = new LinearLayout(this);
         breathPanel.setOrientation(LinearLayout.VERTICAL);
+        breathPanel.setPadding(dp(12), dp(12), dp(12), dp(12));
+        breathPanel.setBackground(panelBackground());
         breathPanel.setContentDescription("Панель практик дыхания");
         buildBreathPanel(breathPanel);
         root.addView(breathPanel);
@@ -135,6 +151,8 @@ public class MainActivity extends android.app.Activity {
 
     private void buildMeatPanel(LinearLayout panel) {
         panel.addView(sectionTitle("Готовка мяса"));
+        flameView = new FlameView(this);
+        panel.addView(flameView, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(150)));
         meatMinutesInput = numberInput("Длительность готовки в минутах", prefInt("meatMinutes", 10), 1, 120);
         panel.addView(labeled("Длительность, минут", meatMinutesInput));
         panel.addView(collapsiblePresetPanel("Быстрый выбор длительности готовки", new int[]{5, 10, 20, 30, 40, 50, 60}, value -> meatMinutesInput.setText(String.valueOf(value))));
@@ -151,6 +169,8 @@ public class MainActivity extends android.app.Activity {
 
     private void buildBreathPanel(LinearLayout panel) {
         panel.addView(sectionTitle("Практики дыхания"));
+        breathOrbView = new BreathOrbView(this);
+        panel.addView(breathOrbView, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(140)));
         breathMinutesInput = numberInput("Длительность практики в минутах", prefInt("breathMinutes", 5), 1, 120);
         inhaleInput = numberInput("Вдох в секундах", prefInt("inhaleSeconds", 4), 1, 30);
         exhaleInput = numberInput("Выдох в секундах", prefInt("exhaleSeconds", 6), 1, 30);
@@ -180,6 +200,8 @@ public class MainActivity extends android.app.Activity {
         if (breathPanel != null) breathPanel.setVisibility(meatActive ? View.GONE : View.VISIBLE);
         if (meatTabButton != null) meatTabButton.setEnabled(!meatActive);
         if (breathTabButton != null) breathTabButton.setEnabled(meatActive);
+        if (meatTabButton != null) meatTabButton.setBackground(buttonBackground(meatActive));
+        if (breathTabButton != null) breathTabButton.setBackground(buttonBackground(!meatActive));
         if (meatTabButton != null) meatTabButton.setContentDescription(meatActive ? "Выбрана вкладка: готовка мяса" : "Вкладка: готовка мяса");
         if (breathTabButton != null) breathTabButton.setContentDescription(meatActive ? "Вкладка: практики дыхания" : "Выбрана вкладка: практики дыхания");
         prefs.edit().putString("activeMode", meatActive ? KIND_MEAT : KIND_BREATH).apply();
@@ -259,6 +281,7 @@ public class MainActivity extends android.app.Activity {
         if (meatToggle != null) meatToggle.setText(meatState.running ? "Пауза" : "Запуск");
         if (breathToggle != null) breathToggle.setText(breathState.running ? "Пауза" : "Запуск");
         if (breathPhaseDisplay != null) breathPhaseDisplay.setText(currentBreathPhaseText());
+        updateBreathOrb();
         speakBreathPhaseIfNeeded();
         if (meatState.running && meatState.remainingMillis <= 0L) resetMeat();
         if (breathState.running && breathState.remainingMillis <= 0L) resetBreath();
@@ -266,15 +289,27 @@ public class MainActivity extends android.app.Activity {
 
     private String currentBreathPhaseText() {
         if (!breathState.running || breathState.remainingMillis <= 0L) return "Готово";
-        long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - breathState.startedElapsedMs);
-        TimerMath.BreathPhase phase = TimerMath.breathPhase(elapsed, readInput(inhaleInput, 1, 30, 4), readInput(exhaleInput, 1, 30, 6));
+        TimerMath.BreathPhase phase = currentBreathPhase();
         return ("inhale".equals(phase.phase) ? "Вдох" : "Выдох") + ", осталось " + phase.remainingSeconds + " сек.";
+    }
+
+    private TimerMath.BreathPhase currentBreathPhase() {
+        long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - breathState.startedElapsedMs);
+        return TimerMath.breathPhase(elapsed, readInput(inhaleInput, 1, 30, 4), readInput(exhaleInput, 1, 30, 6));
+    }
+
+    private void updateBreathOrb() {
+        if (breathOrbView == null) return;
+        if (!breathState.running || breathState.remainingMillis <= 0L) {
+            breathOrbView.resetOrb();
+            return;
+        }
+        breathOrbView.setPhase(currentBreathPhase().phase);
     }
 
     private void speakBreathPhaseIfNeeded() {
         if (!breathState.running || breathState.remainingMillis <= 0L || !voicePromptsEnabled()) return;
-        long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - breathState.startedElapsedMs);
-        TimerMath.BreathPhase phase = TimerMath.breathPhase(elapsed, readInput(inhaleInput, 1, 30, 4), readInput(exhaleInput, 1, 30, 6));
+        TimerMath.BreathPhase phase = currentBreathPhase();
         if (!phase.phase.equals(lastSpokenBreathPhase)) {
             lastSpokenBreathPhase = phase.phase;
             PromptPlayer.playPhase(this, phase.phase, currentLanguage());
@@ -340,17 +375,20 @@ public class MainActivity extends android.app.Activity {
         }
     }
 
-    private TextView heading(String text) { TextView v = new TextView(this); v.setText(text); v.setTextSize(26); v.setGravity(Gravity.CENTER_HORIZONTAL); v.setPadding(0, 0, 0, dp(12)); return v; }
-    private TextView sectionTitle(String text) { TextView v = new TextView(this); v.setText(text); v.setTextSize(22); v.setPadding(0, dp(24), 0, dp(8)); return v; }
-    private TextView paragraph(String text) { TextView v = new TextView(this); v.setText(text); v.setTextSize(16); v.setPadding(0, dp(4), 0, dp(8)); return v; }
-    private TextView timerText() { TextView v = new TextView(this); v.setTextSize(42); v.setGravity(Gravity.CENTER_HORIZONTAL); v.setPadding(0, dp(12), 0, dp(12)); return v; }
-    private Button button(String text) { Button b = new Button(this); b.setText(text); b.setAllCaps(false); b.setTextSize(18); b.setPadding(dp(8), dp(8), dp(8), dp(8)); return b; }
+    private TextView heading(String text) { TextView v = new TextView(this); v.setText(text); v.setTextSize(26); v.setTextColor(COLOR_TEXT); v.setGravity(Gravity.CENTER_HORIZONTAL); v.setPadding(0, 0, 0, dp(12)); return v; }
+    private TextView sectionTitle(String text) { TextView v = new TextView(this); v.setText(text); v.setTextSize(22); v.setTextColor(COLOR_TEXT); v.setPadding(0, dp(24), 0, dp(8)); return v; }
+    private TextView paragraph(String text) { TextView v = new TextView(this); v.setText(text); v.setTextSize(16); v.setTextColor(COLOR_HINT); v.setPadding(0, dp(4), 0, dp(8)); return v; }
+    private TextView timerText() { TextView v = new TextView(this); v.setTextSize(42); v.setTextColor(COLOR_TEXT); v.setGravity(Gravity.CENTER_HORIZONTAL); v.setPadding(0, dp(12), 0, dp(12)); return v; }
+    private Button button(String text) { Button b = new Button(this); b.setText(text); b.setAllCaps(false); b.setTextSize(18); b.setTextColor(COLOR_TEXT); b.setBackground(buttonBackground(false)); b.setPadding(dp(8), dp(8), dp(8), dp(8)); return b; }
 
     private EditText numberInput(String label, int value, int min, int max) {
         EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
         input.setText(String.valueOf(Math.max(min, Math.min(max, value))));
         input.setHint(label);
+        input.setTextColor(COLOR_TEXT);
+        input.setHintTextColor(COLOR_HINT);
+        input.setBackground(buttonBackground(false));
         input.setContentDescription(label);
         return input;
     }
@@ -362,6 +400,22 @@ public class MainActivity extends android.app.Activity {
         box.addView(l);
         box.addView(child);
         return box;
+    }
+
+    private GradientDrawable panelBackground() {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(COLOR_PANEL);
+        drawable.setStroke(dp(1), Color.rgb(64, 64, 72));
+        drawable.setCornerRadius(dp(16));
+        return drawable;
+    }
+
+    private GradientDrawable buttonBackground(boolean selected) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(selected ? COLOR_ACCENT : Color.rgb(45, 45, 52));
+        drawable.setStroke(dp(1), selected ? Color.rgb(255, 150, 60) : Color.rgb(96, 96, 104));
+        drawable.setCornerRadius(dp(10));
+        return drawable;
     }
 
     private interface PresetHandler { void apply(int value); }

@@ -42,6 +42,7 @@ The existing static PWA remains in place. The Android app is not a WebView wrapp
 - Android 12+ exact alarm access has a visible helper action when the system requires it.
 - UI uses normal native `TextView`, `Button`, `EditText`, and semantic labels so TalkBack can read the flow.
 - Android UI preserves the PWA structure: two accessible mode tabs and collapsible quick-choice panels instead of one long mixed screen.
+- Android UI preserves the PWA visual feel: dark background, animated flame for cooking, and animated breathing orb for practice; decorative views are hidden from accessibility services.
 - Validation runs at least a static smoke check; if Android SDK/Gradle are available, run a debug build too.
 
 ### Implementation tasks
