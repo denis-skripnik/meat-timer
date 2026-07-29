@@ -73,6 +73,9 @@ assert(receiver.includes('Пора перевернуть мясо'), 'Meat minu
 assert(receiver.includes('Практика дыхания завершена'), 'Breath finish notification copy is missing.');
 assert(receiver.includes('goAsync()'), 'Receiver should keep broadcast alive while prompts play.');
 assert(receiver.includes('PromptPlayer.playPrompt'), 'Receiver should play native voice prompts for alarms.');
+assert(receiver.includes('alertNotificationId') && receiver.includes('MEAT_ALERT_NOTIFICATION_ID') && !receiver.includes('idBase +'), 'Timer alerts should update one notification per timer instead of creating one per minute.');
+assert(receiver.includes('markTimerFinished'), 'Finish alerts should clear persisted running state.');
+assert(receiver.includes('ACTION_STOP_IF_IDLE'), 'Finish alerts should ask the keeper service to stop if no timers remain.');
 assert(receiver.includes('PREF_VOICE_PROMPTS'), 'Voice prompts should be user-toggleable.');
 
 assert(promptPlayer.includes('AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK'), 'Prompt playback should request transient may-duck audio focus.');
@@ -82,6 +85,7 @@ assert(promptPlayer.includes('minutePromptFiles'), 'Composable minute prompts sh
 assert(keeper.includes('PARTIAL_WAKE_LOCK'), 'Foreground keeper should hold a partial wake lock while a timer runs.');
 assert(keeper.includes('startForeground'), 'Foreground keeper should run as a foreground service.');
 assert(keeper.includes('START_STICKY'), 'Foreground keeper should be restartable while timers are active.');
+assert(keeper.includes('refreshExpiredTimers') && keeper.includes('clearExpiredTimer'), 'Foreground keeper should clear expired timers when the app UI is not open.');
 assert(promptPlayer.includes('number-') && promptPlayer.includes('minute-few.mp3'), 'RU/EN composable minute files should be referenced.');
 assert(exists('app/src/main/assets/audio/ru/meat-start.mp3'), 'RU start prompt asset is missing.');
 assert(exists('app/src/main/assets/audio/ru/number-120.mp3'), 'RU number prompt assets are missing.');

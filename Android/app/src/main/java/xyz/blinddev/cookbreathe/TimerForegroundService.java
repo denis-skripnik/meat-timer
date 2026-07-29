@@ -11,10 +11,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 
 public class TimerForegroundService extends Service {
     public static final String ACTION_REFRESH = "xyz.blinddev.cookbreathe.REFRESH_TIMER_KEEPER";
     public static final String ACTION_STOP = "xyz.blinddev.cookbreathe.STOP_TIMER_KEEPER";
+    public static final String ACTION_STOP_IF_IDLE = "xyz.blinddev.cookbreathe.STOP_TIMER_KEEPER_IF_IDLE";
     private static final int NOTIFICATION_ID = 77;
     private static final long CHECK_INTERVAL_MS = 5_000L;
 
@@ -23,6 +25,7 @@ public class TimerForegroundService extends Service {
 
     private final Runnable checker = new Runnable() {
         @Override public void run() {
+            refreshExpiredTimers();
             if (!hasRunningTimer()) {
                 stopSelf();
                 return;
@@ -41,13 +44,15 @@ public class TimerForegroundService extends Service {
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && ACTION_STOP.equals(intent.getAction())) {
+        String action = intent == null ? ACTION_REFRESH : intent.getAction();
+        if (ACTION_STOP.equals(action)) {
             stopSelf();
             return START_NOT_STICKY;
         }
+        refreshExpiredTimers();
         if (!hasRunningTimer()) {
             stopSelf();
-            return START_NOT_STICKY;
+            return ACTION_STOP_IF_IDLE.equals(action) ? START_NOT_STICKY : START_NOT_STICKY;
         }
         if (!wakeLock.isHeld()) wakeLock.acquire();
         startForeground(NOTIFICATION_ID, buildNotification());
@@ -67,6 +72,29 @@ public class TimerForegroundService extends Service {
     private boolean hasRunningTimer() {
         SharedPreferences prefs = getSharedPreferences(TimerAlarmReceiver.PREFS, MODE_PRIVATE);
         return prefs.getBoolean("meatRunning", false) || prefs.getBoolean("breathRunning", false);
+    }
+
+    private void refreshExpiredTimers() {
+        SharedPreferences prefs = getSharedPreferences(TimerAlarmReceiver.PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        boolean changed = false;
+        changed = clearExpiredTimer(prefs, editor, "meat") || changed;
+        changed = clearExpiredTimer(prefs, editor, "breath") || changed;
+        if (changed) editor.apply();
+    }
+
+    private boolean clearExpiredTimer(SharedPreferences prefs, SharedPreferences.Editor editor, String prefix) {
+        if (!prefs.getBoolean(prefix + "Running", false)) return false;
+        long started = prefs.getLong(prefix + "Started", 0L);
+        long duration = prefs.getLong(prefix + "Duration", 0L);
+        if (started <= 0L || duration <= 0L) return false;
+        long remaining = TimerMath.remainingMillis(started + duration, SystemClock.elapsedRealtime());
+        if (remaining > 0L) return false;
+        editor.putBoolean(prefix + "Running", false)
+            .putLong(prefix + "Started", 0L)
+            .putLong(prefix + "Duration", 0L)
+            .putLong(prefix + "Remaining", 0L);
+        return true;
     }
 
     private void updateForegroundNotification() {

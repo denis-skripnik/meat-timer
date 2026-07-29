@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 
 public class TimerAlarmReceiver extends BroadcastReceiver {
@@ -16,6 +17,8 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
     public static final String PREFS = "cook_breathe_prefs";
     public static final String PREF_VOICE_PROMPTS = "voicePrompts";
     public static final String PREF_LANGUAGE = "language";
+    public static final int MEAT_ALERT_NOTIFICATION_ID = 1000;
+    public static final int BREATH_ALERT_NOTIFICATION_ID = 2000;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -32,6 +35,10 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
         if (finish) {
             title = breath ? "Дыхание завершено" : "Таймер завершён";
             text = breath ? "Практика дыхания завершена." : "Готовка завершена. Можно снимать мясо с огня.";
+            markTimerFinished(context, breath ? "breath" : "meat");
+            Intent keeperIntent = new Intent(context, TimerForegroundService.class).setAction(TimerForegroundService.ACTION_STOP_IF_IDLE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(keeperIntent);
+            else context.startService(keeperIntent);
         } else {
             title = breath ? "Минута дыхания" : "Минута таймера";
             text = breath
@@ -42,7 +49,7 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
         Intent openIntent = new Intent(context, MainActivity.class);
         openIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent openPendingIntent = PendingIntent.getActivity(
-            context, 1, openIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            context, breath ? 20 : 10, openIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         android.app.Notification.Builder builder = new android.app.Notification.Builder(context)
@@ -52,6 +59,7 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
             .setStyle(new android.app.Notification.BigTextStyle().bigText(text))
             .setContentIntent(openPendingIntent)
             .setAutoCancel(true)
+            .setOnlyAlertOnce(false)
             .setWhen(System.currentTimeMillis())
             .setShowWhen(true)
             .setVibrate(new long[] {0, 220, 120, 220});
@@ -60,8 +68,7 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
         if (finish) builder.setOngoing(false);
 
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        int idBase = breath ? 2000 : 1000;
-        manager.notify(idBase + (finish ? 999 : Math.max(1, minute)), builder.build());
+        manager.notify(alertNotificationId(breath), builder.build());
 
         boolean voicePrompts = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(PREF_VOICE_PROMPTS, true);
         String language = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LANGUAGE, "ru");
@@ -70,6 +77,19 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
         } else {
             pendingResult.finish();
         }
+    }
+
+    public static int alertNotificationId(boolean breath) {
+        return breath ? BREATH_ALERT_NOTIFICATION_ID : MEAT_ALERT_NOTIFICATION_ID;
+    }
+
+    private static void markTimerFinished(Context context, String prefix) {
+        SharedPreferences.Editor editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(prefix + "Running", false)
+            .putLong(prefix + "Started", 0L)
+            .putLong(prefix + "Duration", 0L)
+            .putLong(prefix + "Remaining", 0L)
+            .apply();
     }
 
     public static void ensureChannel(Context context) {

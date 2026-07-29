@@ -24,6 +24,8 @@ Mobile browsers can throttle JavaScript timers and audio when a PWA is hidden or
 - Local settings via `SharedPreferences`.
 - Android notification permission request on Android 13+.
 - Foreground timer keeper service with a partial wake lock while a timer runs. This keeps minute prompts timely after the screen locks instead of waiting for Android to batch alarms in Doze.
+- Timer alert notifications use one stable notification ID per timer type, so each minute updates the existing notification instead of adding 10–20 separate notifications.
+- Finish alerts clear persisted running state even when the app UI is not open, so the foreground keeper notification can stop after completion.
 - Exact alarm helper button on Android 12+ when the system requires permission.
 - Native controls (`TextView`, `EditText`, `Button`) for TalkBack-friendly navigation.
 - Two native mode tabs: `Готовка мяса` and `Практики дыхания`.
