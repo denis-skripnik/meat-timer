@@ -1,0 +1,13 @@
+# Local dependencies and generated output
+node_modules/
+dist/
+.astro/
+
+# Android local/build files
+Android/.gradle/
+Android/local.properties
+Android/app/build/
+
+# OS/editor noise
+.DS_Store
+*.swp
