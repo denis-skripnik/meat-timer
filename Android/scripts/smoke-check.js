@@ -7,16 +7,19 @@ const files = {
   main: 'app/src/main/java/xyz/blinddev/cookbreathe/MainActivity.java',
   scheduler: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerScheduler.java',
   receiver: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerAlarmReceiver.java',
+  promptPlayer: 'app/src/main/java/xyz/blinddev/cookbreathe/PromptPlayer.java',
   math: 'app/src/main/java/xyz/blinddev/cookbreathe/TimerMath.java'
 };
 
 function read(rel) { return fs.readFileSync(path.join(root, rel), 'utf8'); }
 function assert(condition, message) { if (!condition) throw new Error(message); }
+function exists(rel) { return fs.existsSync(path.join(root, rel)); }
 
 const manifest = read(files.manifest);
 const main = read(files.main);
 const scheduler = read(files.scheduler);
 const receiver = read(files.receiver);
+const promptPlayer = read(files.promptPlayer);
 const math = read(files.math);
 
 assert(manifest.includes('android.permission.POST_NOTIFICATIONS'), 'Android 13 notification permission is missing.');
@@ -31,6 +34,9 @@ assert(main.includes('SharedPreferences'), 'Local settings persistence is missin
 assert(main.includes('scheduler.scheduleTimer(KIND_MEAT'), 'Meat timer should schedule native alarms.');
 assert(main.includes('scheduler.scheduleTimer(KIND_BREATH'), 'Breath timer should schedule native alarms.');
 assert(main.includes('setContentDescription'), 'Accessible content descriptions should be present.');
+assert(main.includes('Озвучивать подсказки поверх музыки'), 'Voice prompt checkbox copy is missing.');
+assert(main.includes('PromptPlayer.playStart'), 'Start prompts should play from the Activity.');
+assert(main.includes('PromptPlayer.playPhase'), 'Breathing phase prompts should play while the app is open.');
 
 assert(scheduler.includes('setExactAndAllowWhileIdle'), 'Scheduler should use exact allow-while-idle alarms.');
 assert(scheduler.includes('ELAPSED_REALTIME_WAKEUP'), 'Scheduler should use elapsed realtime wakeup alarms.');
@@ -42,6 +48,18 @@ assert(receiver.includes('IMPORTANCE_HIGH'), 'Timer notifications should be high
 assert(receiver.includes('setContentIntent'), 'Notification tap should open the app.');
 assert(receiver.includes('Пора перевернуть мясо'), 'Meat minute notification copy is missing.');
 assert(receiver.includes('Практика дыхания завершена'), 'Breath finish notification copy is missing.');
+assert(receiver.includes('goAsync()'), 'Receiver should keep broadcast alive while prompts play.');
+assert(receiver.includes('PromptPlayer.playPrompt'), 'Receiver should play native voice prompts for alarms.');
+assert(receiver.includes('PREF_VOICE_PROMPTS'), 'Voice prompts should be user-toggleable.');
+
+assert(promptPlayer.includes('AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK'), 'Prompt playback should request transient may-duck audio focus.');
+assert(promptPlayer.includes('USAGE_ASSISTANCE_SONIFICATION'), 'Prompt playback should use sonification audio attributes.');
+assert(promptPlayer.includes('CONTENT_TYPE_SPEECH'), 'Prompt playback should mark prompts as speech.');
+assert(promptPlayer.includes('minutePromptFiles'), 'Composable minute prompts should be supported.');
+assert(promptPlayer.includes('number-') && promptPlayer.includes('minute-few.mp3'), 'RU/EN composable minute files should be referenced.');
+assert(exists('app/src/main/assets/audio/ru/meat-start.mp3'), 'RU start prompt asset is missing.');
+assert(exists('app/src/main/assets/audio/ru/number-120.mp3'), 'RU number prompt assets are missing.');
+assert(exists('app/src/main/assets/audio/en/breath-finish.mp3'), 'EN prompt assets are missing.');
 
 assert(math.includes('remainingMillis'), 'Wall-clock remaining helper is missing.');
 assert(math.includes('breathPhase'), 'Breath phase helper is missing.');

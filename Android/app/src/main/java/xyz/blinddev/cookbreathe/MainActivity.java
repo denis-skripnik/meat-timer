@@ -16,6 +16,7 @@ import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -33,6 +34,8 @@ public class MainActivity extends android.app.Activity {
     private EditText meatMinutesInput;
     private TextView meatDisplay;
     private Button meatToggle;
+    private CheckBox voicePromptsCheckbox;
+    private String lastSpokenBreathPhase = "";
 
     private EditText breathMinutesInput;
     private EditText inhaleInput;
@@ -87,6 +90,15 @@ public class MainActivity extends android.app.Activity {
             root.addView(exactButton);
         }
 
+        voicePromptsCheckbox = new CheckBox(this);
+        voicePromptsCheckbox.setText("Озвучивать подсказки поверх музыки");
+        voicePromptsCheckbox.setTextSize(18);
+        voicePromptsCheckbox.setChecked(prefs.getBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, true));
+        voicePromptsCheckbox.setContentDescription("Озвучивать подсказки таймера поверх музыки");
+        voicePromptsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> prefs.edit().putBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, isChecked).apply());
+        root.addView(voicePromptsCheckbox);
+        root.addView(paragraph("Озвучка использует короткий audio focus с ducking: музыка обычно продолжает играть и только слегка приглушается на время фразы."));
+
         root.addView(sectionTitle("Готовка мяса"));
         meatMinutesInput = numberInput("Длительность готовки в минутах", prefInt("meatMinutes", 10), 1, 120);
         root.addView(labeled("Длительность, минут", meatMinutesInput));
@@ -137,6 +149,7 @@ public class MainActivity extends android.app.Activity {
         if (meatState.remainingMillis <= 0L) meatState = TimerState.start(minutes);
         else meatState = meatState.resume();
         scheduler.scheduleTimer(KIND_MEAT, meatState.startedElapsedMs, (int) Math.ceil(meatState.durationMillis / 60_000.0));
+        playStartPrompt(KIND_MEAT);
         persistRuntimeState();
         updateAllDisplays();
     }
@@ -165,6 +178,8 @@ public class MainActivity extends android.app.Activity {
         if (breathState.remainingMillis <= 0L) breathState = TimerState.start(minutes);
         else breathState = breathState.resume();
         scheduler.scheduleTimer(KIND_BREATH, breathState.startedElapsedMs, (int) Math.ceil(breathState.durationMillis / 60_000.0));
+        playStartPrompt(KIND_BREATH);
+        lastSpokenBreathPhase = "";
         persistRuntimeState();
         updateAllDisplays();
     }
@@ -172,6 +187,7 @@ public class MainActivity extends android.app.Activity {
     private void pauseBreath() {
         breathState = breathState.pause();
         scheduler.cancelTimer(KIND_BREATH);
+        lastSpokenBreathPhase = "";
         persistRuntimeState();
         updateAllDisplays();
     }
@@ -179,6 +195,7 @@ public class MainActivity extends android.app.Activity {
     private void resetBreath() {
         breathState = TimerState.idle();
         scheduler.cancelTimer(KIND_BREATH);
+        lastSpokenBreathPhase = "";
         persistRuntimeState();
         updateAllDisplays();
     }
@@ -196,6 +213,7 @@ public class MainActivity extends android.app.Activity {
         if (meatToggle != null) meatToggle.setText(meatState.running ? "Пауза" : "Запуск");
         if (breathToggle != null) breathToggle.setText(breathState.running ? "Пауза" : "Запуск");
         if (breathPhaseDisplay != null) breathPhaseDisplay.setText(currentBreathPhaseText());
+        speakBreathPhaseIfNeeded();
         if (meatState.running && meatState.remainingMillis <= 0L) resetMeat();
         if (breathState.running && breathState.remainingMillis <= 0L) resetBreath();
     }
@@ -207,12 +225,36 @@ public class MainActivity extends android.app.Activity {
         return ("inhale".equals(phase.phase) ? "Вдох" : "Выдох") + ", осталось " + phase.remainingSeconds + " сек.";
     }
 
+    private void speakBreathPhaseIfNeeded() {
+        if (!breathState.running || breathState.remainingMillis <= 0L || !voicePromptsEnabled()) return;
+        long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - breathState.startedElapsedMs);
+        TimerMath.BreathPhase phase = TimerMath.breathPhase(elapsed, readInput(inhaleInput, 1, 30, 4), readInput(exhaleInput, 1, 30, 6));
+        if (!phase.phase.equals(lastSpokenBreathPhase)) {
+            lastSpokenBreathPhase = phase.phase;
+            PromptPlayer.playPhase(this, phase.phase, currentLanguage());
+        }
+    }
+
+    private void playStartPrompt(String kind) {
+        if (voicePromptsEnabled()) PromptPlayer.playStart(this, kind, currentLanguage());
+    }
+
+    private boolean voicePromptsEnabled() {
+        return voicePromptsCheckbox == null || voicePromptsCheckbox.isChecked();
+    }
+
+    private String currentLanguage() {
+        return prefs.getString(TimerAlarmReceiver.PREF_LANGUAGE, "ru");
+    }
+
     private void saveSettings() {
         prefs.edit()
             .putInt("meatMinutes", readInput(meatMinutesInput, 1, 120, 10))
             .putInt("breathMinutes", readInput(breathMinutesInput, 1, 120, 5))
             .putInt("inhaleSeconds", readInput(inhaleInput, 1, 30, 4))
             .putInt("exhaleSeconds", readInput(exhaleInput, 1, 30, 6))
+            .putBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, voicePromptsEnabled())
+            .putString(TimerAlarmReceiver.PREF_LANGUAGE, currentLanguage())
             .apply();
     }
 

@@ -13,9 +13,13 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
     public static final String EXTRA_KIND = "kind";
     public static final String EXTRA_EVENT = "event";
     public static final String EXTRA_MINUTE = "minute";
+    public static final String PREFS = "cook_breathe_prefs";
+    public static final String PREF_VOICE_PROMPTS = "voicePrompts";
+    public static final String PREF_LANGUAGE = "language";
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        PendingResult pendingResult = goAsync();
         ensureChannel(context);
         String kind = intent.getStringExtra(EXTRA_KIND);
         String event = intent.getStringExtra(EXTRA_EVENT);
@@ -58,6 +62,14 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         int idBase = breath ? 2000 : 1000;
         manager.notify(idBase + (finish ? 999 : Math.max(1, minute)), builder.build());
+
+        boolean voicePrompts = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(PREF_VOICE_PROMPTS, true);
+        String language = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LANGUAGE, "ru");
+        if (voicePrompts) {
+            PromptPlayer.playPrompt(context, breath ? "breath" : "meat", finish ? "finish" : "minute", minute, language, pendingResult::finish);
+        } else {
+            pendingResult.finish();
+        }
     }
 
     public static void ensureChannel(Context context) {

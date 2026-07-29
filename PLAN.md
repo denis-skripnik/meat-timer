@@ -60,7 +60,9 @@ The existing static PWA remains in place. The Android app is not a WebView wrapp
 - Exact alarms are still subject to Android's exact-alarm permission/policy on Android 12+; the app should guide the user to allow exact alarms when needed.
 - Android 13+ requires runtime notification permission; without it alerts will not appear.
 - Some OEM battery managers can still delay or suppress background work if the app is aggressively restricted, but native exact alarms are much more reliable than browser `setInterval` in a hidden PWA.
-- Voice prompts are not required in this first Android pass; native notifications, vibration, and exact timing are the priority.
+- Voice prompts are bundled from the PWA MP3 assets under `app/src/main/assets/audio/{ru,en}/`.
+- Voice prompts use short transient ducking audio focus, so music apps should usually continue playing with brief volume ducking rather than being stopped.
+- Android/OEM audio-focus behavior can vary; some players may still pause instead of ducking.
 
 ## Definition of done
 
