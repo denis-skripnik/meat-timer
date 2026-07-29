@@ -44,6 +44,8 @@ The existing static PWA remains in place. The Android app is not a WebView wrapp
 - Android UI preserves the PWA structure: two accessible mode tabs and collapsible quick-choice panels instead of one long mixed screen.
 - Android UI preserves the PWA visual feel: dark background, animated flame for cooking, and animated breathing orb for practice; decorative views are hidden from accessibility services.
 - Active timers start a foreground keeper service with a partial wake lock. This avoids Android delaying minute prompts after the screen has been locked for a while; AlarmManager remains as the notification trigger/backstop.
+- The foreground keeper notification is silent and low-importance; audible alerts are reserved for minute/final timer events.
+- If the system still restricts the app, show user-facing battery guidance and a direct button to app settings so the user can choose unrestricted/no-optimization mode.
 - Timer alerts update one stable notification per timer type instead of creating a new notification every minute; finish alerts clear persisted running state for foreground-service shutdown.
 - Validation runs at least a static smoke check; if Android SDK/Gradle are available, run a debug build too.
 

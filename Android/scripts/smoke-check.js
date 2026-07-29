@@ -40,6 +40,7 @@ assert(manifest.includes('TimerAlarmReceiver'), 'TimerAlarmReceiver is not regis
 
 assert(main.includes('requestNotificationPermissionIfNeeded()'), 'Notification runtime permission request is missing.');
 assert(main.includes('openExactAlarmSettings()'), 'Exact alarm settings helper is missing.');
+assert(main.includes('isIgnoringBatteryOptimizations') && main.includes('openBatterySettings'), 'Battery restriction guidance/settings helper is missing.');
 assert(main.includes('Готовка мяса'), 'Meat timer section is missing.');
 assert(main.includes('Практики дыхания'), 'Breathing timer section is missing.');
 assert(main.includes('switchMode(KIND_MEAT)'), 'Native meat tab switching is missing.');
@@ -68,6 +69,7 @@ assert(scheduler.includes('canScheduleExactAlarms'), 'Scheduler should check exa
 
 assert(receiver.includes('NotificationChannel'), 'Notification channel is missing.');
 assert(receiver.includes('IMPORTANCE_HIGH'), 'Timer notifications should be high importance.');
+assert(receiver.includes('KEEPER_CHANNEL_ID') && receiver.includes('IMPORTANCE_LOW') && receiver.includes('setSound(null, null)'), 'Foreground keeper notification channel should be low importance and silent.');
 assert(receiver.includes('setContentIntent'), 'Notification tap should open the app.');
 assert(receiver.includes('Пора перевернуть мясо'), 'Meat minute notification copy is missing.');
 assert(receiver.includes('Практика дыхания завершена'), 'Breath finish notification copy is missing.');
@@ -83,6 +85,9 @@ assert(promptPlayer.includes('USAGE_ASSISTANCE_SONIFICATION'), 'Prompt playback 
 assert(promptPlayer.includes('CONTENT_TYPE_SPEECH'), 'Prompt playback should mark prompts as speech.');
 assert(promptPlayer.includes('minutePromptFiles'), 'Composable minute prompts should be supported.');
 assert(keeper.includes('PARTIAL_WAKE_LOCK'), 'Foreground keeper should hold a partial wake lock while a timer runs.');
+assert(keeper.includes('KEEPER_CHANNEL_ID'), 'Foreground keeper should use the silent low-importance keeper channel.');
+assert(keeper.includes('setOnlyAlertOnce(true)') && keeper.includes('setDefaults(0)') && keeper.includes('setSound(null)') && keeper.includes('setVibrate(null)'), 'Foreground keeper notification should not make repeated sounds.');
+assert(!keeper.includes('updateForegroundNotification();'), 'Foreground keeper should not re-alert by refreshing notification every 5 seconds.');
 assert(keeper.includes('startForeground'), 'Foreground keeper should run as a foreground service.');
 assert(keeper.includes('START_STICKY'), 'Foreground keeper should be restartable while timers are active.');
 assert(keeper.includes('refreshExpiredTimers') && keeper.includes('clearExpiredTimer'), 'Foreground keeper should clear expired timers when the app UI is not open.');

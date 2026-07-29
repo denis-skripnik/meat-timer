@@ -30,7 +30,6 @@ public class TimerForegroundService extends Service {
                 stopSelf();
                 return;
             }
-            updateForegroundNotification();
             handler.postDelayed(this, CHECK_INTERVAL_MS);
         }
     };
@@ -109,7 +108,7 @@ public class TimerForegroundService extends Service {
             this, 2, openIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         String text = foregroundText();
-        return new Notification.Builder(this, TimerAlarmReceiver.CHANNEL_ID)
+        return new Notification.Builder(this, TimerAlarmReceiver.KEEPER_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Cook & Breathe работает")
             .setContentText(text)
@@ -117,6 +116,10 @@ public class TimerForegroundService extends Service {
             .setContentIntent(openPendingIntent)
             .setOngoing(true)
             .setShowWhen(false)
+            .setOnlyAlertOnce(true)
+            .setDefaults(0)
+            .setSound(null)
+            .setVibrate(null)
             .build();
     }
 

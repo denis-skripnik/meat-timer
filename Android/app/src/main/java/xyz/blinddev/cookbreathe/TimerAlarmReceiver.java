@@ -11,6 +11,7 @@ import android.os.Build;
 
 public class TimerAlarmReceiver extends BroadcastReceiver {
     public static final String CHANNEL_ID = "cook_breathe_timers";
+    public static final String KEEPER_CHANNEL_ID = "cook_breathe_timer_keeper";
     public static final String EXTRA_KIND = "kind";
     public static final String EXTRA_EVENT = "event";
     public static final String EXTRA_MINUTE = "minute";
@@ -95,13 +96,22 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
     public static void ensureChannel(Context context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel existing = manager.getNotificationChannel(CHANNEL_ID);
-        if (existing != null) return;
-        NotificationChannel channel = new NotificationChannel(
-            CHANNEL_ID, "Cook & Breathe timers", NotificationManager.IMPORTANCE_HIGH
+        if (manager.getNotificationChannel(CHANNEL_ID) == null) {
+            NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID, "Cook & Breathe timer alerts", NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Audible minute and completion alerts for cooking and breathing timers.");
+            channel.enableVibration(true);
+            manager.createNotificationChannel(channel);
+        }
+
+        if (manager.getNotificationChannel(KEEPER_CHANNEL_ID) != null) return;
+        NotificationChannel keeper = new NotificationChannel(
+            KEEPER_CHANNEL_ID, "Cook & Breathe active timer", NotificationManager.IMPORTANCE_LOW
         );
-        channel.setDescription("Minute and completion alerts for cooking and breathing timers.");
-        channel.enableVibration(true);
-        manager.createNotificationChannel(channel);
+        keeper.setDescription("Silent ongoing notification shown while a timer is kept active under the locked screen.");
+        keeper.setSound(null, null);
+        keeper.enableVibration(false);
+        manager.createNotificationChannel(keeper);
     }
 }

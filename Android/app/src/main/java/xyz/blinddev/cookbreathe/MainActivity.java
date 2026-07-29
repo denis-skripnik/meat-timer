@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.text.InputType;
@@ -103,6 +104,14 @@ public class MainActivity extends android.app.Activity {
             Button exactButton = button("Разрешить точные уведомления");
             exactButton.setOnClickListener(v -> openExactAlarmSettings());
             root.addView(exactButton);
+        }
+
+        if (!isIgnoringBatteryOptimizations()) {
+            root.addView(paragraph("Если минутные подсказки всё равно опаздывают после блокировки экрана, откройте настройки батареи приложения и выберите режим без ограничений. На разных Android это может называться: Без ограничений, Не оптимизировать, Разрешить работу в фоне."));
+            Button batteryButton = button("Открыть настройки батареи приложения");
+            batteryButton.setContentDescription("Открыть настройки приложения, чтобы отключить ограничения расхода энергии для Cook & Breathe");
+            batteryButton.setOnClickListener(v -> openBatterySettings());
+            root.addView(batteryButton);
         }
 
         voicePromptsCheckbox = new CheckBox(this);
@@ -379,6 +388,17 @@ public class MainActivity extends android.app.Activity {
             Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()));
             startActivity(intent);
         }
+    }
+
+    private boolean isIgnoringBatteryOptimizations() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        return powerManager != null && powerManager.isIgnoringBatteryOptimizations(getPackageName());
+    }
+
+    private void openBatterySettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
     }
 
     private void startTimerKeeper() {
