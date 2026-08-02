@@ -56,6 +56,8 @@ assert(main.includes('setContentDescription'), 'Accessible content descriptions 
 assert(main.includes('Озвучивать подсказки поверх музыки'), 'Voice prompt checkbox copy is missing.');
 assert(main.includes('PromptPlayer.playStart'), 'Start prompts should play from the Activity.');
 assert(main.includes('PromptPlayer.playPhase'), 'Breathing phase prompts should play while the app is open.');
+assert(main.includes('Три точки для дыхания') && main.includes('Валик под поясницей') && main.includes('Валик под грудной клеткой') && main.includes('Валик под шеей'), 'Three-position breathing guide is missing.');
+assert(main.includes('Поставить 10 минут') && main.includes('speakGuide') && main.includes('TextToSpeech'), 'Breathing guide should offer 10-minute setup and spoken descriptions.');
 assert(main.includes('startTimerKeeper') && main.includes('startForegroundService'), 'Active timers should start a foreground keeper service.');
 assert(main.includes('updateTimerKeeper'), 'Timer keeper should stop when timers pause/reset.');
 assert(main.includes('COLOR_BACKGROUND') && main.includes('setBackgroundColor(COLOR_BACKGROUND)'), 'Dark PWA-like background is missing.');

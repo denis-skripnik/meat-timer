@@ -15,6 +15,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.provider.Settings;
+import android.speech.tts.TextToSpeech;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
@@ -24,6 +25,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import java.util.Locale;
 
 public class MainActivity extends android.app.Activity {
     private static final String PREFS = "cook_breathe_prefs";
@@ -37,6 +40,8 @@ public class MainActivity extends android.app.Activity {
 
     private SharedPreferences prefs;
     private TimerScheduler scheduler;
+    private TextToSpeech guideTts;
+    private boolean guideTtsReady = false;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private EditText meatMinutesInput;
@@ -74,6 +79,10 @@ public class MainActivity extends android.app.Activity {
         scheduler = new TimerScheduler(this);
         TimerAlarmReceiver.ensureChannel(this);
         requestNotificationPermissionIfNeeded();
+        guideTts = new TextToSpeech(this, status -> {
+            guideTtsReady = status == TextToSpeech.SUCCESS;
+            if (guideTtsReady) guideTts.setLanguage(new Locale("ru", "RU"));
+        });
         restoreState();
         setContentView(buildUi());
         updateAllDisplays();
@@ -82,6 +91,10 @@ public class MainActivity extends android.app.Activity {
 
     @Override protected void onDestroy() {
         handler.removeCallbacks(uiTicker);
+        if (guideTts != null) {
+            guideTts.stop();
+            guideTts.shutdown();
+        }
         super.onDestroy();
     }
 
@@ -185,6 +198,7 @@ public class MainActivity extends android.app.Activity {
         exhaleInput = numberInput("Выдох в секундах", prefInt("exhaleSeconds", 6), 1, 30);
         panel.addView(labeled("Практика, минут", breathMinutesInput));
         panel.addView(collapsiblePresetPanel("Быстрый выбор длительности практики", new int[]{1, 2, 3, 5, 10, 15, 20, 30}, value -> breathMinutesInput.setText(String.valueOf(value))));
+        panel.addView(breathGuidePanel());
         panel.addView(labeled("Вдох, секунд", inhaleInput));
         panel.addView(collapsiblePresetPanel("Быстрый выбор вдоха", new int[]{1,2,3,4,5,6,7,8,9,10}, value -> inhaleInput.setText(String.valueOf(value))));
         panel.addView(labeled("Выдох, секунд", exhaleInput));
@@ -333,6 +347,49 @@ public class MainActivity extends android.app.Activity {
 
     private void playStartPrompt(String kind) {
         if (voicePromptsEnabled()) PromptPlayer.playStart(this, kind, currentLanguage());
+    }
+
+    private View breathGuidePanel() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(0, dp(10), 0, dp(10));
+        box.addView(sectionTitle("Три точки для дыхания"));
+        box.addView(paragraph("Каждый пункт рассчитан на 10 минут. Используйте только если положение комфортно; при боли или онемении прекратите практику."));
+        addBreathGuidePoint(box,
+            "Валик под поясницей — сакрум",
+            "Это про выдох. Глубокий, животный. Когда крестец мягко опирается на плотную лузгу, поясница получает сигнал: опасности нет, можно расслабить спазм. Почувствуйте, как бедра стекают на пол, а живот становится мягким.");
+        addBreathGuidePoint(box,
+            "Валик под грудной клеткой — вдоль позвоночника",
+            "Мягкий шелест гречки под спиной, руки раскинуты в стороны. Здесь раскрывается грудная клетка. Это мягкая тракция для зажатых межлопаточных мышц. Полежите так 10 минут и заметите, как легче дышится, словно сняли бронежилет.");
+        addBreathGuidePoint(box,
+            "Валик под шеей",
+            "Мешочек под шейный лордоз помогает замедлиться. Затылок удлиняется, подбородок чуть уходит вниз, поток мыслей постепенно становится спокойнее.");
+        return box;
+    }
+
+    private void addBreathGuidePoint(LinearLayout parent, String title, String text) {
+        TextView titleView = sectionTitle(title);
+        titleView.setTextSize(18);
+        parent.addView(titleView);
+        parent.addView(paragraph(text));
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.CENTER_HORIZONTAL);
+        Button tenMinutes = button("Поставить 10 минут");
+        tenMinutes.setContentDescription("Поставить таймер практики дыхания на 10 минут для пункта: " + title);
+        tenMinutes.setOnClickListener(v -> breathMinutesInput.setText("10"));
+        Button speak = button("Озвучить");
+        speak.setContentDescription("Озвучить описание пункта: " + title);
+        speak.setOnClickListener(v -> speakGuide(title + ". " + text));
+        actions.addView(tenMinutes);
+        actions.addView(speak);
+        parent.addView(actions);
+    }
+
+    private void speakGuide(String text) {
+        if (guideTtsReady && guideTts != null) {
+            guideTts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "breath-guide");
+        }
     }
 
     private boolean voicePromptsEnabled() {

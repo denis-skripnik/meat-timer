@@ -35,6 +35,7 @@ The existing static PWA remains in place. The Android app is not a WebView wrapp
 - `Android/` contains a standalone Gradle Android app project.
 - App has meat cooking timer controls: duration, quick presets, start/pause/reset.
 - App has breathing timer controls: practice duration, inhale seconds, exhale seconds, start/pause/reset.
+- Breathing tab includes a three-point 10-minute guide: sacrum/lower back, thoracic spine, and neck; each point can set the timer to 10 minutes and can be spoken with Android TextToSpeech.
 - User settings are persisted locally.
 - On timer start/resume, native exact alarms are scheduled for minute reminders and completion.
 - Notification tap opens the app.
