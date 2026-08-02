@@ -19,7 +19,7 @@ Mobile browsers can throttle JavaScript timers and audio when a PWA is hidden or
   - practice duration;
   - inhale and exhale seconds;
   - quick presets;
-  - three 10-minute body-position guide points: lower back/sacrum, thoracic spine, and neck;
+  - three 10-minute body-position guide points from the source text: lower back/sacrum, thoracic spine, and neck;
   - each guide point can set the timer to 10 minutes and can be spoken through Android TextToSpeech;
   - screen phase label;
   - minute reminder notifications and final notification.
