@@ -45,6 +45,14 @@
     .preset-details summary { cursor: pointer; padding: 12px 14px; font-weight: 700; }
     .preset-buttons { padding: 0 10px 12px; text-align: center; }
     .preset-buttons button { min-width: 52px; }
+    .breath-guide {
+      margin: 16px auto; padding: 14px; max-width: 680px; text-align: left;
+      border: 1px solid #3c5f85; border-radius: 14px; background: rgba(20, 56, 96, 0.22);
+    }
+    .breath-guide h3 { margin: 0 0 8px; text-align: center; }
+    .breath-guide h4 { margin: 16px 0 6px; }
+    .breath-guide p { line-height: 1.55; }
+    .breath-guide-actions { text-align: center; }
     .flame {
       position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 120px; height: 160px;
@@ -147,6 +155,37 @@
             <button type="button" onclick="setBreathPreset('minutes', 30, this)">30</button>
           </div>
         </details>
+        <section class="breath-guide" aria-labelledby="breathGuideHeading">
+          <h3 id="breathGuideHeading">Три волшебные точки</h3>
+          <p>Каждый пункт — на 10 минут.</p>
+
+          <article>
+            <h4>🌱 Валик под поясницей — сакрум</h4>
+            <p id="breathGuideSacrum">Это про выдох. Глубокий, животный. Когда крестец мягко опирается на плотную, шуршащую лузгу, поясница получает сигнал: «Опасности нет, можно расслабить спазм». Уходит напряжение с подвздошно-поясничной мышцы. Чувствуете, как бедра «стекают» на пол, а живот становится мягким? Это возвращение к естественному поясничному лордозу без насилия.</p>
+            <div class="breath-guide-actions">
+              <button type="button" onclick="setBreathGuideDuration()">Поставить 10 минут</button>
+              <button type="button" onclick="speakBreathGuide('Валик под поясницей — сакрум. ' + document.getElementById('breathGuideSacrum').textContent)">Озвучить</button>
+            </div>
+          </article>
+
+          <article>
+            <h4>🌱 Валик под грудной клеткой — вдоль позвоночника</h4>
+            <p id="breathGuideChest">Мягкий шелест гречки под спиной, руки раскинуты в стороны. Здесь раскрывается не только грудная клетка, но и душа. Физиологически: это мягкая тракция для зажатых межлопаточных мышц. Уходят «вдовий горбик» и сутулость офисного жителя. Полежите так 10 минут, и вы удивитесь, как легко задышится. Словно сняли бронежилет.</p>
+            <div class="breath-guide-actions">
+              <button type="button" onclick="setBreathGuideDuration()">Поставить 10 минут</button>
+              <button type="button" onclick="speakBreathGuide('Валик под грудной клеткой — вдоль позвоночника. ' + document.getElementById('breathGuideChest').textContent)">Озвучить</button>
+            </div>
+          </article>
+
+          <article>
+            <h4>🌱 Валик под шеей</h4>
+            <p id="breathGuideNeck">Этот мешочек под шейный лордоз творит чудеса с блуждающим нервом. Лучшее средство от «тяжелой головы» и мигреней, вызванных экраном телефона. Затылок удлиняется, подбородок чуть уходит вниз — и поток мыслей наконец-то замедляет свою дикую скачку.</p>
+            <div class="breath-guide-actions">
+              <button type="button" onclick="setBreathGuideDuration()">Поставить 10 минут</button>
+              <button type="button" onclick="speakBreathGuide('Валик под шеей. ' + document.getElementById('breathGuideNeck').textContent)">Озвучить</button>
+            </div>
+          </article>
+        </section>
         <label><span data-i18n="inhaleLabel">Вдох</span>
           <input id="inhaleInput" type="number" min="1" max="30" value="4">
           <span data-i18n="secondsLabel">сек</span></label>
@@ -346,6 +385,19 @@
       else if (field === 'exhale') exhaleInput.value = value;
       saveTimerSettings();
       collapsePresetDetails(trigger);
+    }
+
+    function setBreathGuideDuration() {
+      breathMinutesInput.value = 10;
+      saveTimerSettings();
+    }
+
+    function speakBreathGuide(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ru-RU';
+      window.speechSynthesis.speak(utterance);
     }
 
     async function requestWakeLock() {

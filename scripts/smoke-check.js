@@ -47,6 +47,8 @@ assert(html.includes('id="meatPresetControls"'), 'Meat preset controls section i
 assert(html.includes('id="breathMinutesPresetControls"'), 'Breathing practice minute preset controls section is missing.');
 assert(html.includes('id="inhalePresetControls"'), 'Inhale preset controls section is missing.');
 assert(html.includes('id="exhalePresetControls"'), 'Exhale preset controls section is missing.');
+assert(html.includes('Три волшебные точки') && html.includes('Валик под поясницей') && html.includes('Валик под грудной клеткой') && html.includes('Валик под шеей'), 'Web breathing guide source text is missing.');
+assert(html.includes('setBreathGuideDuration()') && html.includes('speakBreathGuide('), 'Web breathing guide should support 10-minute setup and browser speech.');
 
 for (let second = 1; second <= 10; second += 1) {
   assert(html.includes(`setBreathPreset('inhale', ${second}, this)`), `Inhale ${second}s preset button is missing.`);
@@ -87,6 +89,6 @@ assert(html.includes('data-i18n="supportHeading"'), 'Support block heading shoul
 assert(html.includes('class="support-link"'), 'Support CTA should be a normal accessible link.');
 assert(html.includes('target="_blank" rel="noopener noreferrer"'), 'External support link should open safely.');
 
-assert(sw.includes("meat-breath-timer-v11"), 'Service worker cache version should be bumped after HTML changes.');
+assert(sw.includes("meat-breath-timer-v12"), 'Service worker cache version should be bumped after HTML changes.');
 
 console.log('Smoke checks passed.');
