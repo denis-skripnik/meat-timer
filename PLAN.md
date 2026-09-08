@@ -1,5 +1,30 @@
 # PLAN
 
+## Approved audit fixes — 2026-09-08
+
+Outcome: fix all nine reviewed defects, preserving the independent static PWA and native Android app, existing guide wording, tabs, notification roles and MP3 prompts.
+
+Boundaries: root timer JS/service-worker cache, audio generator, Android timer/state/scheduler/playback/UI, focused tests and existing documentation. No redesign, backend, payment/link changes, production deployment, device install or unrelated cleanup.
+
+Functional slices:
+- [x] Add regressions for invalid web input, live editing, cancellation/serial speech and English 70–99.
+- [x] Web: validate integer ranges; keep valid session phase parameters; serialize prompts and cancel timer-owned speech/delays.
+- [x] Android: preserve exact deadline/elapsed time across pause; guard exact-alarm failure before committing running state; discard runtime state from another boot without discarding settings.
+- [x] Android: serialize/cancel timer prompts, avoid stale phase queue; persist valid field edits; expose actual expanded/collapsed state.
+- [x] Run behavioral checks, existing smoke checks, Android debug build and local browser flows; inspect final diff and commit only task files.
+
+Verification: `node scripts/timer-regression.js`, both existing smoke scripts, Android unit tests/debug build, browser on isolated local server with console checks. Android OS permission, reboot, TalkBack and audio focus require device evidence; report any unavailable coverage explicitly.
+
+Constraints: timer deadlines remain authoritative, minute numbering and breathing elapsed time survive pause. Invalid edits cannot prevent completion. One timer's cancellation must not silence the other. Preserve media/guide content; generator fix is text-only unless existing MP3 defects are demonstrated. Preserve valid settings across recreation; expire old-boot runtime state, not preferences.
+
+Data safety: app SharedPreferences/localStorage and bundled audio must not be erased. No live data/backend in this repository; git initially clean. No reset/clean, no production sync/restart, no user device operations. Runtime-state migration invalidates only legacy running timers lacking a boot marker; paused remaining duration remains resumable. Build outputs remain ignored.
+
+Stop when: secrets, spending/audio generation charges, device install, public release/deploy or an out-of-scope system change is required. Local validation server is bounded to this task, shut down after browser checks. No background agent runs.
+
+Definition of Done: all nine fixes implemented with focused regression evidence, existing checks and build green, browser behavior exercised, remaining device-only coverage stated honestly.
+
+Verified: 8 web regression tests, 14 Robolectric tests, both smoke checks and debug build pass. Browser: invalid input rejected; a one-minute breath practice completes despite an empty inhale field; start/reset works. Diagnostic window error/rejection hooks reported no errors during final start/reset (Camofox does not expose native console logs). Physical-device TalkBack, OEM lock-screen/audio focus and reboot remain untested. Audio and HTML guide markup unchanged. Push withheld: GitHub Pages deploys main automatically.
+
 ## Scope
 
 Extend the existing Cook & Breathe / Meat-timer project with a separate native Android app in `Android/`.

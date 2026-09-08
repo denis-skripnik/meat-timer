@@ -23,9 +23,21 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        PendingResult pendingResult = goAsync();
-        ensureChannel(context);
+        TimerScheduler.discardStaleRunningTimers(context);
         String kind = intent.getStringExtra(EXTRA_KIND);
+        if (!"meat".equals(kind) && !"breath".equals(kind)) return;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        long deadline = intent.getLongExtra("deadline", 0L);
+        if (deadline <= 0L || prefs.getLong(kind + "AlarmDeadline", 0L) != deadline) return;
+        // Paused/reset/replaced sessions must never restart their queued speech.
+        if (!"finish".equals(intent.getStringExtra(EXTRA_EVENT)) && !prefs.getBoolean(kind + "Running", false)) return;
+        PendingResult pendingResult = goAsync();
+        android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+        java.util.concurrent.atomic.AtomicBoolean completed = new java.util.concurrent.atomic.AtomicBoolean();
+        Runnable done = () -> { if (completed.compareAndSet(false, true)) pendingResult.finish(); };
+        // A queued phrase must not hold a BroadcastReceiver beyond its time budget.
+        handler.postDelayed(done, 8_000L);
+        ensureChannel(context);
         String event = intent.getStringExtra(EXTRA_EVENT);
         int minute = intent.getIntExtra(EXTRA_MINUTE, 0);
         boolean breath = "breath".equals(kind);
@@ -74,9 +86,9 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
         boolean voicePrompts = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(PREF_VOICE_PROMPTS, true);
         String language = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_LANGUAGE, "ru");
         if (voicePrompts) {
-            PromptPlayer.playPrompt(context, breath ? "breath" : "meat", finish ? "finish" : "minute", minute, language, pendingResult::finish);
+            PromptPlayer.playPrompt(context, breath ? "breath" : "meat", finish ? "finish" : "minute", minute, language, done);
         } else {
-            pendingResult.finish();
+            done.run();
         }
     }
 
@@ -86,7 +98,7 @@ public class TimerAlarmReceiver extends BroadcastReceiver {
 
     private static void markTimerFinished(Context context, String prefix) {
         SharedPreferences.Editor editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit();
-        editor.putBoolean(prefix + "Running", false)
+        editor.putLong(prefix + "AlarmDeadline", 0L).putBoolean(prefix + "Running", false)
             .putLong(prefix + "Started", 0L)
             .putLong(prefix + "Duration", 0L)
             .putLong(prefix + "Remaining", 0L)

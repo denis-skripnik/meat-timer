@@ -42,6 +42,23 @@ Mobile browsers can throttle JavaScript timers and audio when a PWA is hidden or
 - A TalkBack-accessible checkbox: `Озвучивать подсказки поверх музыки`.
 - Prompt playback uses transient ducking audio focus (`AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`) and speech/sonification audio attributes. This is designed so music apps usually keep playing and only become quieter while the short timer phrase plays.
 
+## Timer correctness
+
+- Pause/resume preserves millisecond precision, elapsed minute numbering and breathing phase. Final alarms use the same deadline as the display.
+- Denied exact-alarm access leaves the timer stopped; a permission race rolls back partial alarm scheduling.
+- Running state from an older boot (or legacy running state without a boot marker) is discarded. User settings and explicitly paused timers are retained. This is not automatic continuation of a running timer across reboot.
+- Valid number edits/presets are saved immediately, before starting a timer. Collapsible button descriptions expose their current state.
+- Timer prompts share a serial player. Pause/reset cancels only that timer's speech; phase words are not queued when they would become stale. A late alarm from a cancelled/replaced run is ignored.
+
+## Validation
+
+```bash
+node scripts/smoke-check.js
+./gradlew testDebugUnitTest assembleDebug
+```
+
+Robolectric tests execute the Activity, AlarmManager integration, receiver, keeper and MediaPlayer paths using simulated Android services. JUnit/Robolectric are test-only dependencies. They do not replace on-device tests of lock-screen delivery, OEM battery behavior, real audio focus and TalkBack.
+
 ## Build
 
 From this folder:

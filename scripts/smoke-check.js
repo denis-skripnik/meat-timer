@@ -71,9 +71,8 @@ assert(script.includes("trigger.closest('details')"), 'Preset collapse should ta
 assert(html.includes('setMeatPreset(5, this)'), 'Meat preset buttons should pass the clicked button to the handler.');
 assert(html.includes("setBreathPreset('inhale', 10, this)"), 'Breathing preset buttons should pass the clicked button to the handler.');
 
-assert(script.includes("startBreathPhase('inhale', 650)"), 'Initial inhale phase should start immediately; only the voice prompt may be delayed.');
-assert(!script.includes("setTimeout(() => startBreathPhase('inhale'), 650)"), 'Initial phase timing should not be delayed by the start prompt.');
-assert(script.includes('promptDelayMs = 0'), 'Breathing phase helper should support delayed prompt without delaying phase timing.');
+// Start/phase ordering and cancellation are exercised by timer-regression.js,
+// rather than asserting an obsolete fixed speech delay in the implementation.
 assert(script.includes('getRemainingSeconds(deadlineMs'), 'Timers should use wall-clock deadlines instead of trusting setInterval cadence.');
 assert(script.includes('meatDeadlineMs = Date.now() + meatRemainingSeconds * 1000'), 'Meat timer should resume from a wall-clock deadline.');
 assert(script.includes('breathDeadlineMs = breathStartedAtMs + breathConfiguredSeconds * 1000'), 'Breath timer should track a wall-clock deadline.');
@@ -89,6 +88,6 @@ assert(html.includes('data-i18n="supportHeading"'), 'Support block heading shoul
 assert(html.includes('class="support-link"'), 'Support CTA should be a normal accessible link.');
 assert(html.includes('target="_blank" rel="noopener noreferrer"'), 'External support link should open safely.');
 
-assert(sw.includes("meat-breath-timer-v12"), 'Service worker cache version should be bumped after HTML changes.');
+assert(sw.includes("meat-breath-timer-v13"), 'Service worker cache version should be bumped after HTML changes.');
 
 console.log('Smoke checks passed.');

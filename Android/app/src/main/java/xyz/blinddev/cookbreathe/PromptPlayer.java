@@ -10,30 +10,54 @@ import android.os.Build;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
 
 public final class PromptPlayer {
-    private static final List<MediaPlayer> ACTIVE_PLAYERS = new ArrayList<>();
+    // All entry points and MediaPlayer callbacks run on the main thread.
+    private static final Queue<Prompt> PENDING = new ArrayDeque<>();
+    private static Prompt current;
+    private static MediaPlayer activePlayer;
+
+    private static final class Prompt {
+        final Context context;
+        final String kind;
+        final String language;
+        final Queue<String> files = new ArrayDeque<>();
+        final Runnable done;
+        AudioManager audioManager;
+        Object focusRequest;
+
+        Prompt(Context context, String kind, String language, String[] files, Runnable done) {
+            this.context = context.getApplicationContext();
+            this.kind = kind;
+            this.language = isEnglish(language) ? "en" : "ru";
+            for (String file : files) if (file != null && !file.isEmpty()) this.files.add(file);
+            this.done = done;
+        }
+    }
 
     private PromptPlayer() {}
 
     public static void playStart(Context context, String kind, String language) {
-        playFiles(context, language, "breath".equals(kind) ? new String[] {"breath-start.mp3"} : new String[] {"meat-start.mp3"}, null);
+        cancel(kind);
+        playFiles(context, kind, language, "breath".equals(kind) ? new String[] {"breath-start.mp3"} : new String[] {"meat-start.mp3"}, null);
     }
 
-    public static void playPhase(Context context, String phase, String language) {
-        playFiles(context, language, new String[] {"inhale".equals(phase) ? "breath-inhale.mp3" : "breath-exhale.mp3"}, null);
+    public static boolean playPhase(Context context, String phase, String language) {
+        // Retry the current phase from the UI ticker, never queue stale phase words.
+        if (current != null || !PENDING.isEmpty()) return false;
+        playFiles(context, "breath", language, new String[] {"inhale".equals(phase) ? "breath-inhale.mp3" : "breath-exhale.mp3"}, null);
+        return true;
     }
 
     public static void playPrompt(Context context, String kind, String event, int minute, String language, Runnable done) {
         String safeLang = isEnglish(language) ? "en" : "ru";
         if ("finish".equals(event)) {
-            playFiles(context, safeLang, new String[] {"breath".equals(kind) ? "breath-finish.mp3" : "meat-finish.mp3"}, done);
+            cancel(kind);
+            playFiles(context, kind, safeLang, new String[] {"breath".equals(kind) ? "breath-finish.mp3" : "meat-finish.mp3"}, done);
             return;
         }
-        playFiles(context, safeLang, minutePromptFiles("breath".equals(kind) ? "breath" : "meat", minute, safeLang), done);
+        playFiles(context, kind, safeLang, minutePromptFiles("breath".equals(kind) ? "breath" : "meat", minute, safeLang), done);
     }
 
     private static String[] minutePromptFiles(String kind, int minute, String language) {
@@ -66,48 +90,67 @@ public final class PromptPlayer {
         return "en".equals(language);
     }
 
-    private static void playFiles(Context context, String language, String[] files, Runnable done) {
-        Context appContext = context.getApplicationContext();
-        AudioManager audioManager = (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE);
-        Object focusRequest = requestDuckingFocus(audioManager);
-        Queue<String> queue = new ArrayDeque<>();
-        for (String file : files) if (file != null && !file.isEmpty()) queue.add(file);
-        playNext(appContext, language, queue, audioManager, focusRequest, done);
+    private static void playFiles(Context context, String kind, String language, String[] files, Runnable done) {
+        PENDING.add(new Prompt(context, kind, language, files, done));
+        startNextPrompt();
     }
 
-    private static void playNext(Context context, String language, Queue<String> queue, AudioManager audioManager, Object focusRequest, Runnable done) {
-        String file = queue.poll();
-        if (file == null) {
-            abandonFocus(audioManager, focusRequest);
-            if (done != null) done.run();
-            return;
-        }
+    private static void startNextPrompt() {
+        if (current != null) return;
+        current = PENDING.poll();
+        if (current == null) return;
+        current.audioManager = (AudioManager) current.context.getSystemService(Context.AUDIO_SERVICE);
+        current.focusRequest = requestDuckingFocus(current.audioManager);
+        playNextFile(current);
+    }
 
+    public static void cancel(String kind) {
+        java.util.Iterator<Prompt> iterator = PENDING.iterator();
+        while (iterator.hasNext()) {
+            Prompt prompt = iterator.next();
+            if (prompt.kind.equals(kind)) {
+                iterator.remove();
+                if (prompt.done != null) prompt.done.run();
+            }
+        }
+        if (current != null && current.kind.equals(kind)) finishPrompt(current);
+    }
+
+    private static void finishPrompt(Prompt prompt) {
+        if (current != prompt) return;
+        current = null;
+        if (activePlayer != null) { release(activePlayer); activePlayer = null; }
+        abandonFocus(prompt.audioManager, prompt.focusRequest);
+        if (prompt.done != null) prompt.done.run();
+        startNextPrompt();
+    }
+
+    private static void playNextFile(Prompt prompt) {
+        if (current != prompt) return;
+        String file = prompt.files.poll();
+        if (file == null) { finishPrompt(prompt); return; }
         MediaPlayer player = new MediaPlayer();
-        synchronized (ACTIVE_PLAYERS) { ACTIVE_PLAYERS.add(player); }
-        try {
-            AssetFileDescriptor afd = context.getAssets().openFd("audio/" + language + "/" + file);
+        activePlayer = player;
+        try (AssetFileDescriptor afd = prompt.context.getAssets().openFd("audio/" + prompt.language + "/" + file)) {
             player.setAudioAttributes(new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                 .build());
             player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            afd.close();
-            player.setOnCompletionListener(mp -> {
-                release(mp);
-                playNext(context, language, queue, audioManager, focusRequest, done);
-            });
-            player.setOnErrorListener((mp, what, extra) -> {
-                release(mp);
-                playNext(context, language, queue, audioManager, focusRequest, done);
-                return true;
-            });
+            player.setOnCompletionListener(mp -> completeFile(prompt, mp));
+            player.setOnErrorListener((mp, what, extra) -> { completeFile(prompt, mp); return true; });
             player.prepare();
             player.start();
         } catch (IOException | RuntimeException error) {
-            release(player);
-            playNext(context, language, queue, audioManager, focusRequest, done);
+            completeFile(prompt, player);
         }
+    }
+
+    private static void completeFile(Prompt prompt, MediaPlayer player) {
+        if (current != prompt || activePlayer != player) return;
+        release(player);
+        activePlayer = null;
+        playNextFile(prompt);
     }
 
     private static Object requestDuckingFocus(AudioManager audioManager) {
@@ -137,7 +180,8 @@ public final class PromptPlayer {
     }
 
     private static void release(MediaPlayer player) {
-        synchronized (ACTIVE_PLAYERS) { ACTIVE_PLAYERS.remove(player); }
+        player.setOnCompletionListener(null);
+        player.setOnErrorListener(null);
         try { player.release(); } catch (RuntimeException ignored) {}
     }
 }

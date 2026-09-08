@@ -14,7 +14,7 @@ const ruNumbers = {
 
 const enOnes = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const enTeens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
-const enTens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty'];
+const enTens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
 
 function ruNumber(n) {
   if (ruNumbers[n]) return ruNumbers[n];

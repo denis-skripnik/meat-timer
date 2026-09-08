@@ -39,6 +39,12 @@ The UI, notifications, and recorded audio prompts support Russian and English.
 - Service worker caches the app shell and all MP3 assets for offline use after first load.
 - Browser notifications are routed through the service worker.
 
+### Timer safety and editing
+
+- Durations accept whole minutes from 1–120; inhale/exhale accept whole seconds from 1–30.
+- Invalid edits during a breathing practice retain the last valid phase setting and never block completion.
+- Timer speech plays sequentially. Pause/reset cancels that timer's active and pending prompts, without cancelling the other timer. Phase words are spoken only when current, not queued behind old phases.
+
 ## Audio prompts
 
 The app does **not** depend on Web Speech Synthesis for user-facing voice messages. It plays local MP3 files from:
@@ -103,9 +109,10 @@ Run the static smoke check after UI or service-worker changes:
 
 ```bash
 node scripts/smoke-check.js
+node scripts/timer-regression.js
 ```
 
-The check parses the inline app script, parses `sw.js`, and verifies the accessible collapsible preset controls plus saved-setting hooks.
+The smoke check parses the inline app script and service worker and checks structural hooks. The regression suite executes the application with deterministic clock/audio adapters: boundaries, live editing, pause/resume, serial/cancelled speech and English number generation. It does not generate or overwrite MP3 files.
 
 ## GitHub Pages
 

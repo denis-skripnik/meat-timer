@@ -74,6 +74,7 @@ public class TimerForegroundService extends Service {
     }
 
     private void refreshExpiredTimers() {
+        TimerScheduler.discardStaleRunningTimers(this);
         SharedPreferences prefs = getSharedPreferences(TimerAlarmReceiver.PREFS, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         boolean changed = false;
@@ -86,7 +87,9 @@ public class TimerForegroundService extends Service {
         if (!prefs.getBoolean(prefix + "Running", false)) return false;
         long started = prefs.getLong(prefix + "Started", 0L);
         long duration = prefs.getLong(prefix + "Duration", 0L);
-        if (started <= 0L || duration <= 0L) return false;
+        // A resumed timer may have a virtual start before this boot (negative),
+        // because its original elapsed practice time is preserved.
+        if (duration <= 0L) return false;
         long remaining = TimerMath.remainingMillis(started + duration, SystemClock.elapsedRealtime());
         if (remaining > 0L) return false;
         editor.putBoolean(prefix + "Running", false)

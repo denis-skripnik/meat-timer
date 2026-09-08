@@ -85,6 +85,10 @@ public class MainActivity extends android.app.Activity {
         });
         restoreState();
         setContentView(buildUi());
+        watchSetting(meatMinutesInput, "meatMinutes", 120);
+        watchSetting(breathMinutesInput, "breathMinutes", 120);
+        watchSetting(inhaleInput, "inhaleSeconds", 30);
+        watchSetting(exhaleInput, "exhaleSeconds", 30);
         updateAllDisplays();
         handler.post(uiTicker);
     }
@@ -133,7 +137,10 @@ public class MainActivity extends android.app.Activity {
         voicePromptsCheckbox.setTextColor(COLOR_TEXT);
         voicePromptsCheckbox.setChecked(prefs.getBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, true));
         voicePromptsCheckbox.setContentDescription("Озвучивать подсказки таймера поверх музыки");
-        voicePromptsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> prefs.edit().putBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, isChecked).apply());
+        voicePromptsCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean(TimerAlarmReceiver.PREF_VOICE_PROMPTS, isChecked).apply();
+            if (!isChecked) { PromptPlayer.cancel(KIND_MEAT); PromptPlayer.cancel(KIND_BREATH); }
+        });
         root.addView(voicePromptsCheckbox);
         root.addView(paragraph("Озвучка использует короткий audio focus с ducking: музыка обычно продолжает играть и только слегка приглушается на время фразы."));
 
@@ -237,16 +244,22 @@ public class MainActivity extends android.app.Activity {
     private void startMeat() {
         int minutes = readInput(meatMinutesInput, 1, 120, 10);
         saveSettings();
-        if (meatState.remainingMillis <= 0L) meatState = TimerState.start(minutes);
-        else meatState = meatState.resume();
+        TimerState next = meatState.remainingMillis <= 0L ? TimerState.start(minutes) : meatState.resume();
+        if (!scheduler.scheduleTimer(KIND_MEAT, next.startedElapsedMs, next.durationMillis)) {
+            showAlarmPermissionError();
+            return;
+        }
+        meatState = next;
+        prefs.edit().putLong("meatAlarmDeadline", next.startedElapsedMs + next.durationMillis).apply();
         persistRuntimeState();
         startTimerKeeper();
-        scheduler.scheduleTimer(KIND_MEAT, meatState.startedElapsedMs, (int) Math.ceil(meatState.durationMillis / 60_000.0));
         playStartPrompt(KIND_MEAT);
         updateAllDisplays();
     }
 
     private void pauseMeat() {
+        PromptPlayer.cancel(KIND_MEAT);
+        prefs.edit().putLong("meatAlarmDeadline", 0L).apply();
         meatState = meatState.pause();
         scheduler.cancelTimer(KIND_MEAT);
         persistRuntimeState();
@@ -255,6 +268,8 @@ public class MainActivity extends android.app.Activity {
     }
 
     private void resetMeat() {
+        PromptPlayer.cancel(KIND_MEAT);
+        prefs.edit().putLong("meatAlarmDeadline", 0L).apply();
         meatState = TimerState.idle();
         scheduler.cancelTimer(KIND_MEAT);
         persistRuntimeState();
@@ -269,17 +284,23 @@ public class MainActivity extends android.app.Activity {
     private void startBreath() {
         int minutes = readInput(breathMinutesInput, 1, 120, 5);
         saveSettings();
-        if (breathState.remainingMillis <= 0L) breathState = TimerState.start(minutes);
-        else breathState = breathState.resume();
+        TimerState next = breathState.remainingMillis <= 0L ? TimerState.start(minutes) : breathState.resume();
+        if (!scheduler.scheduleTimer(KIND_BREATH, next.startedElapsedMs, next.durationMillis)) {
+            showAlarmPermissionError();
+            return;
+        }
+        breathState = next;
+        prefs.edit().putLong("breathAlarmDeadline", next.startedElapsedMs + next.durationMillis).apply();
         persistRuntimeState();
         startTimerKeeper();
-        scheduler.scheduleTimer(KIND_BREATH, breathState.startedElapsedMs, (int) Math.ceil(breathState.durationMillis / 60_000.0));
         playStartPrompt(KIND_BREATH);
         lastSpokenBreathPhase = "";
         updateAllDisplays();
     }
 
     private void pauseBreath() {
+        PromptPlayer.cancel(KIND_BREATH);
+        prefs.edit().putLong("breathAlarmDeadline", 0L).apply();
         breathState = breathState.pause();
         scheduler.cancelTimer(KIND_BREATH);
         lastSpokenBreathPhase = "";
@@ -289,6 +310,8 @@ public class MainActivity extends android.app.Activity {
     }
 
     private void resetBreath() {
+        PromptPlayer.cancel(KIND_BREATH);
+        prefs.edit().putLong("breathAlarmDeadline", 0L).apply();
         breathState = TimerState.idle();
         scheduler.cancelTimer(KIND_BREATH);
         lastSpokenBreathPhase = "";
@@ -298,9 +321,10 @@ public class MainActivity extends android.app.Activity {
     }
 
     private void updateRunningDisplays() {
+        boolean wasRunning = meatState.running || breathState.running;
         if (meatState.running) meatState = meatState.refresh();
         if (breathState.running) breathState = breathState.refresh();
-        if (meatState.running || breathState.running) persistRuntimeState();
+        if (wasRunning) persistRuntimeState();
         updateAllDisplays();
     }
 
@@ -312,8 +336,7 @@ public class MainActivity extends android.app.Activity {
         if (breathPhaseDisplay != null) breathPhaseDisplay.setText(currentBreathPhaseText());
         updateBreathOrb();
         speakBreathPhaseIfNeeded();
-        if (meatState.running && meatState.remainingMillis <= 0L) resetMeat();
-        if (breathState.running && breathState.remainingMillis <= 0L) resetBreath();
+        // Alarm receiver owns final notification/speech; UI expiry must not cancel it.
     }
 
     private String currentBreathPhaseText() {
@@ -339,9 +362,8 @@ public class MainActivity extends android.app.Activity {
     private void speakBreathPhaseIfNeeded() {
         if (!breathState.running || breathState.remainingMillis <= 0L || !voicePromptsEnabled()) return;
         TimerMath.BreathPhase phase = currentBreathPhase();
-        if (!phase.phase.equals(lastSpokenBreathPhase)) {
+        if (!phase.phase.equals(lastSpokenBreathPhase) && PromptPlayer.playPhase(this, phase.phase, currentLanguage())) {
             lastSpokenBreathPhase = phase.phase;
-            PromptPlayer.playPhase(this, phase.phase, currentLanguage());
         }
     }
 
@@ -400,6 +422,23 @@ public class MainActivity extends android.app.Activity {
         return prefs.getString(TimerAlarmReceiver.PREF_LANGUAGE, "ru");
     }
 
+    private void showAlarmPermissionError() {
+        android.widget.Toast.makeText(this, "Для запуска таймера разрешите точные будильники в настройках приложения.", android.widget.Toast.LENGTH_LONG).show();
+    }
+
+    private void watchSetting(EditText input, String key, int max) {
+        input.addTextChangedListener(new android.text.TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(android.text.Editable s) {
+                try {
+                    int value = Integer.parseInt(s.toString().trim());
+                    if (value >= 1 && value <= max) prefs.edit().putInt(key, value).apply();
+                } catch (NumberFormatException ignored) { /* Keep the last valid setting while editing. */ }
+            }
+        });
+    }
+
     private void saveSettings() {
         prefs.edit()
             .putInt("meatMinutes", readInput(meatMinutesInput, 1, 120, 10))
@@ -412,6 +451,7 @@ public class MainActivity extends android.app.Activity {
     }
 
     private void restoreState() {
+        TimerScheduler.discardStaleRunningTimers(this);
         meatState = TimerState.fromPrefs(prefs, "meat");
         breathState = TimerState.fromPrefs(prefs, "breath");
     }
@@ -521,7 +561,7 @@ public class MainActivity extends android.app.Activity {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         Button summary = button(title);
-        summary.setContentDescription(title + ". Нажмите, чтобы раскрыть или скрыть быстрые действия.");
+        summary.setTag(title);
         final LinearLayout[] contentRef = new LinearLayout[1];
         LinearLayout content = presetRow(values, value -> {
             handler.apply(value);
@@ -537,7 +577,10 @@ public class MainActivity extends android.app.Activity {
 
     private void contentVisibility(View content, Button summary, boolean visible) {
         content.setVisibility(visible ? View.VISIBLE : View.GONE);
-        summary.setText((visible ? "Скрыть: " : "Показать: ") + summary.getText().toString().replace("Показать: ", "").replace("Скрыть: ", ""));
+        String title = summary.getTag().toString();
+        String state = visible ? "развёрнуто" : "свёрнуто";
+        summary.setText((visible ? "Скрыть: " : "Показать: ") + title);
+        summary.setContentDescription(title + ", " + state + ". " + (visible ? "Скрыть" : "Показать") + " быстрые действия.");
     }
 
     private LinearLayout presetRow(int[] values, PresetHandler handler) {
@@ -582,7 +625,7 @@ public class MainActivity extends android.app.Activity {
         static TimerState start(int minutes) { long now = SystemClock.elapsedRealtime(); long duration = TimerMath.durationMillis(minutes); return new TimerState(true, now, duration, duration); }
         TimerState refresh() { if (!running) return this; long deadline = startedElapsedMs + durationMillis; return new TimerState(remainingMillis(deadline) > 0L, startedElapsedMs, durationMillis, remainingMillis(deadline)); }
         TimerState pause() { TimerState refreshed = refresh(); return new TimerState(false, 0L, refreshed.durationMillis, refreshed.remainingMillis); }
-        TimerState resume() { long now = SystemClock.elapsedRealtime(); long duration = remainingMillis > 0L ? remainingMillis : durationMillis; return new TimerState(true, now, duration, duration); }
+        TimerState resume() { long now = SystemClock.elapsedRealtime(); return new TimerState(true, now - (durationMillis - remainingMillis), durationMillis, remainingMillis); }
         private long remainingMillis(long deadline) { return TimerMath.remainingMillis(deadline, SystemClock.elapsedRealtime()); }
 
         static TimerState fromPrefs(SharedPreferences prefs, String prefix) {

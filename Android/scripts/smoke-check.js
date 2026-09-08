@@ -106,4 +106,4 @@ assert(orb.includes('RadialGradient') && orb.includes('setPhase'), 'Breathing or
 assert(orb.includes('IMPORTANT_FOR_ACCESSIBILITY_NO'), 'Decorative breathing orb should be hidden from accessibility services.');
 assert(styles.includes('Theme.Material.NoActionBar') && styles.includes('#050507'), 'Dark native theme is missing.');
 
-console.log('Android smoke checks passed.');
+console.log('Android smoke checks passed. Runtime regressions: ./gradlew testDebugUnitTest');
